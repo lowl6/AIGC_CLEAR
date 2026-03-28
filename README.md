@@ -1,11 +1,6 @@
+![Cover](figure/封面图.jpg)
+
 # AIGC_CLEAR
-
-English reorganization of the project for a clean prototype:
-
-- four expert folders (E_IT, E_VL, E_FF, E_SL)
-- training code only for experts
-- a polished Flask web showcase
-- unnecessary legacy files removed
 
 ## 1. Project Layout
 
@@ -104,7 +99,6 @@ Rule of thumb:
 - always save `training_summary.json`
 - save weights under `model/` (or your preferred subfolder) for consistency
 
-## 4. Figures
 
 ### System Architecture
 
@@ -114,17 +108,13 @@ Rule of thumb:
 
 ![Expert Modules](figure/模块12.jpg)
 
-### Cover
-
-![Cover](figure/封面图.jpg)
-
-## 5. Setup
+## 4. Setup
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## 6. Run Expert Training Scripts
+## 5. Run Expert Training Scripts
 
 From the `AIGC_CLEAR` root:
 
@@ -139,7 +129,7 @@ Each script creates:
 
 - `checkpoints/<expert>/run_<timestamp>/training_summary.json`
 
-## 7. Run Web Showcase
+## 6. Run Web Showcase
 
 ```bash
 python web/app.py
@@ -154,7 +144,7 @@ Included endpoints:
 - `GET /api/checkpoint_layout`: returns expected checkpoint folder layout
 - `POST /api/mock_detect`: simple mock endpoint for UI demonstration
 
-## 8. Run Migrated STaR Pipelines
+## 7. Run Migrated STaR Pipelines
 
 From the `AIGC_CLEAR` root:
 
@@ -171,11 +161,11 @@ python experts/e_vl/phase1/train_seed_sft.py
 python experts/common/phase2/run_cra_loop.py --input_path data/FakeReviewDataset/pair_samples.jsonl
 ```
 
-## 9. Notes
+## 8. Notes
 
 - This version intentionally keeps only training-oriented code and web showcase code.
 - Full inference pipeline can be added later by replacing the mock endpoint in `web/app.py`.
 
-## 10. License
+## 9. License
 
 MIT License.
