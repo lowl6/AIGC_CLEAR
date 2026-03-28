@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>定价方案 - TruthLens 真识</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', system-ui, sans-serif; }
+
+        .toggle-checkbox:checked { right: 0; border-color: #3b82f6; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #3b82f6; }
+
+        .recommended-card {
+            border: 2px solid #3b82f6;
+            position: relative;
+            overflow: hidden;
+        }
+        .recommended-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        }
+
+        .check-icon { color: #1e8e3e; margin-right: 0.75rem; flex-shrink: 0; }
+        .feature-item { display: flex; align-items: start; margin-bottom: 0.75rem; font-size: 0.9rem; color: #374151; }
+        .feature-text { line-height: 1.5; }
+
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -12px rgba(0,0,0,0.12);
+        }
+
+        .stat-gradient {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-white text-slate-800">
+
+    <!-- 顶部导航 -->
+    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-slate-200/60">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="index.html" class="flex items-center gap-2.5">
+                <div class="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
+                    <i class="fa-solid fa-shield-halved text-white text-sm"></i>
+                </div>
+                <span class="font-bold text-xl text-slate-800">TruthLens</span>
+                <span class="text-xs text-slate-400 font-medium hidden sm:inline">真识</span>
+            </a>
+            <div class="hidden md:flex items-center gap-8">
+                <a href="detect.html" class="text-sm font-medium text-slate-600 hover:text-blue-600 transition">检测中心</a>
+                <a href="api.html" class="text-sm font-medium text-slate-600 hover:text-blue-600 transition">API 接入</a>
+                <a href="pricing.html" class="text-sm font-semibold text-blue-600">定价方案</a>
+                <a href="dashboard.html" class="text-sm font-medium text-slate-600 hover:text-blue-600 transition">控制台</a>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="detect.html" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition shadow-md shadow-blue-600/20">
+                    免费体验
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-16 md:py-20 text-center">
+        <span class="text-sm text-blue-600 font-semibold uppercase tracking-wider">定价方案</span>
+        <h1 class="text-3xl md:text-5xl font-bold mb-4 mt-3 text-slate-900">为每一种需求量身定制</h1>
+        <p class="text-lg text-slate-500 mb-10 max-w-2xl mx-auto">
+            从个人用户到企业审核系统，提供灵活可扩展的 AI 内容检测方案
+        </p>
+
+        <!-- 月付/年付切换 -->
+        <div class="flex items-center justify-center mb-12 gap-4">
+            <span class="text-sm font-medium text-gray-900" id="monthly-label">月付</span>
+            <div class="relative inline-block w-12 h-6 align-middle select-none transition duration-200 ease-in">
+                <input type="checkbox" name="toggle" id="billing-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-blue-600 appearance-none cursor-pointer transition-all duration-300 left-0" style="top:0;" onclick="toggleBilling()">
+                <label for="billing-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-blue-100 cursor-pointer"></label>
+            </div>
+            <span class="text-sm font-medium text-gray-500" id="yearly-label">年付 <span class="text-green-600 text-xs font-bold bg-green-50 px-2 py-0.5 rounded-full ml-1">省20%</span></span>
+        </div>
+
+        <!-- 定价卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto text-left">
+
+            <!-- 免费版 -->
+            <div class="card-hover bg-white rounded-2xl p-7 border border-gray-200 shadow-sm flex flex-col h-full">
+                <div class="mb-4">
+                    <h3 class="text-xl font-semibold text-slate-900">免费版</h3>
+                    <p class="text-sm text-slate-500 mt-1">个人体验与轻度使用</p>
+                </div>
+                <div class="mb-6">
+                    <span class="text-4xl font-bold text-slate-900">¥0</span>
+                    <span class="text-slate-500">/ 永久免费</span>
+                </div>
+                <button class="w-full py-2.5 rounded-full border border-gray-300 text-blue-600 font-medium hover:bg-blue-50 transition mb-6">
+                    免费开始
+                </button>
+                <div class="flex-1 space-y-3 border-t border-gray-100 pt-5">
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-sm"></i>
+                        <span class="feature-text">每日 <strong>100 次</strong>文本检测</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-sm"></i>
+                        <span class="feature-text">每日 <strong>20 次</strong>图片/链接检测</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-sm"></i>
+                        <span class="feature-text">基础 AI 检测模型</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-sm"></i>
+                        <span class="feature-text">传播风险四级评估</span>
+                    </div>
+                    <div class="feature-item text-gray-400">
+                        <i class="fa-solid fa-minus w-4 mr-3 text-center text-xs"></i>
+                        <span class="feature-text line-through">段落级深度分析</span>
+                    </div>
+                    <div class="feature-item text-gray-400">
+                        <i class="fa-solid fa-minus w-4 mr-3 text-center text-xs"></i>
+                        <span class="feature-text line-through">API 接入</span>
+                    </div>
+                    <div class="feature-item text-gray-400">
+                        <i class="fa-solid fa-minus w-4 mr-3 text-center text-xs"></i>
+                        <span class="feature-text line-through">批量检测</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 专业版 -->
+            <div class="card-hover bg-white rounded-2xl p-7 shadow-xl transform lg:-translate-y-3 flex flex-col h-full recommended-card">
+                <div class="mb-4">
+                    <span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full inline-block mb-2">最受欢迎</span>
+                    <h3 class="text-xl font-semibold text-slate-900">专业版</h3>
+                    <p class="text-sm text-slate-500 mt-1">自媒体人与内容审核</p>
+                </div>
+                <div class="mb-6">
+                    <span class="text-4xl font-bold text-slate-900 price-display" data-monthly="99" data-yearly="948">¥99</span>
+                    <span class="text-slate-500 period-display">/ 月</span>
+                </div>
+                <button class="w-full py-3 rounded-full bg-blue-600 text-white font-medium hover:bg-blue-700 shadow-lg shadow-blue-600/30 transition mb-6 transform hover:scale-[1.02]">
+                    立即升级
+                </button>
+                <div class="flex-1 space-y-3 border-t border-gray-100 pt-5">
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-blue-600 text-sm"></i>
+                        <span class="feature-text">每日 <strong>5,000 次</strong>文本检测</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-blue-600 text-sm"></i>
+                        <span class="feature-text">每日 <strong>500 次</strong>图片/链接检测</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-blue-600 text-sm"></i>
+                        <span class="feature-text"><strong>高精度</strong> TruthLens v2.0 模型</span>
+                    </div>
+                    <div class="feature-item bg-blue-50 p-2 rounded-lg -mx-2">
+                        <i class="fa-solid fa-chart-bar check-icon text-blue-600 text-sm mt-0.5"></i>
+                        <div class="feature-text text-blue-800 font-medium">
+                            段落级深度分析
+                            <div class="text-xs font-normal text-blue-600 mt-0.5">含 AI 模型溯源</div>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-blue-600 text-sm"></i>
+                        <span class="feature-text">批量检测（100条/次）</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-blue-600 text-sm"></i>
+                        <span class="feature-text">PDF 报告导出</span>
+                    </div>
+                    <div class="feature-item text-gray-400">
+                        <i class="fa-solid fa-minus w-4 mr-3 text-center text-xs"></i>
+                        <span class="feature-text line-through">API 接入</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API 版 -->
+            <div class="card-hover bg-white rounded-2xl p-7 border border-gray-200 shadow-sm flex flex-col h-full">
+                <div class="mb-4">
+                    <span class="bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full inline-block mb-2">开发者</span>
+                    <h3 class="text-xl font-semibold text-slate-900">API 版</h3>
+                    <p class="text-sm text-slate-500 mt-1">MCN 机构与平台集成</p>
+                </div>
+                <div class="mb-6">
+                    <span class="text-4xl font-bold text-slate-900 price-display" data-monthly="499" data-yearly="4788">¥499</span>
+                    <span class="text-slate-500 period-display">/ 月</span>
+                </div>
+                <button class="w-full py-2.5 rounded-full border-2 border-purple-600 text-purple-600 font-medium hover:bg-purple-50 transition mb-6">
+                    获取 API Key
+                </button>
+                <div class="flex-1 space-y-3 border-t border-gray-100 pt-5">
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-purple-600 text-sm"></i>
+                        <span class="feature-text">月调用量 <strong>50,000 次</strong></span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-purple-600 text-sm"></i>
+                        <span class="feature-text"><strong>10 QPS</strong> 并发速率</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-purple-600 text-sm"></i>
+                        <span class="feature-text">全部检测模型与深度分析</span>
+                    </div>
+                    <div class="feature-item bg-purple-50 p-2 rounded-lg -mx-2">
+                        <i class="fa-solid fa-code check-icon text-purple-600 text-sm mt-0.5"></i>
+                        <div class="feature-text text-purple-800 font-medium">
+                            RESTful API 接入
+                            <div class="text-xs font-normal text-purple-600 mt-0.5">Python / Node / Java / Go SDK</div>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-purple-600 text-sm"></i>
+                        <span class="feature-text">批量检测（500条/次）</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-purple-600 text-sm"></i>
+                        <span class="feature-text">Webhook 回调通知</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-purple-600 text-sm"></i>
+                        <span class="feature-text">技术支持（工作日）</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 企业版 -->
+            <div class="card-hover bg-slate-50 rounded-2xl p-7 border border-gray-200 flex flex-col h-full">
+                <div class="mb-4">
+                    <h3 class="text-xl font-semibold text-slate-900">企业版</h3>
+                    <p class="text-sm text-slate-500 mt-1">大型平台与政企机构</p>
+                </div>
+                <div class="mb-6">
+                    <div class="flex items-center gap-2">
+                        <span class="text-3xl font-bold text-slate-900">定制报价</span>
+                    </div>
+                    <div class="text-sm text-slate-500 mt-1">按需定制 · 支持私有化部署</div>
+                </div>
+                <button class="w-full py-2.5 rounded-full bg-slate-800 text-white font-medium hover:bg-slate-900 transition mb-6">
+                    联系销售
+                </button>
+                <div class="flex-1 space-y-3 border-t border-gray-200 pt-5">
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-sm"></i>
+                        <span class="feature-text"><strong>不限量</strong>调用配额</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-sm"></i>
+                        <span class="feature-text"><strong>100+ QPS</strong> 高并发</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-sm"></i>
+                        <span class="feature-text"><strong>私有化部署</strong>方案</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-sm"></i>
+                        <span class="feature-text">定制检测模型训练</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-sm"></i>
+                        <span class="feature-text">数据合规与审计日志</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-sm"></i>
+                        <span class="feature-text"><strong>专属客户经理</strong> + SLA</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-check check-icon text-sm"></i>
+                        <span class="feature-text">平台审核系统集成</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 功能对比表 -->
+        <div class="mt-20 max-w-6xl mx-auto">
+            <h2 class="text-2xl font-bold text-slate-900 mb-8">功能对比</h2>
+            <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="text-left px-6 py-4 font-semibold text-slate-600 w-1/3">功能</th>
+                                <th class="px-4 py-4 font-semibold text-slate-600 text-center">免费版</th>
+                                <th class="px-4 py-4 font-semibold text-blue-600 text-center bg-blue-50/50">专业版</th>
+                                <th class="px-4 py-4 font-semibold text-purple-600 text-center">API 版</th>
+                                <th class="px-4 py-4 font-semibold text-slate-600 text-center">企业版</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr>
+                                <td class="px-6 py-3 text-slate-700 font-medium">文本检测</td>
+                                <td class="px-4 py-3 text-center">100次/日</td>
+                                <td class="px-4 py-3 text-center bg-blue-50/30 font-medium">5,000次/日</td>
+                                <td class="px-4 py-3 text-center">50K次/月</td>
+                                <td class="px-4 py-3 text-center">不限</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-3 text-slate-700 font-medium">图片检测</td>
+                                <td class="px-4 py-3 text-center">20次/日</td>
+                                <td class="px-4 py-3 text-center bg-blue-50/30 font-medium">500次/日</td>
+                                <td class="px-4 py-3 text-center">10K次/月</td>
+                                <td class="px-4 py-3 text-center">不限</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-3 text-slate-700 font-medium">链接检测</td>
+                                <td class="px-4 py-3 text-center">20次/日</td>
+                                <td class="px-4 py-3 text-center bg-blue-50/30 font-medium">500次/日</td>
+                                <td class="px-4 py-3 text-center">10K次/月</td>
+                                <td class="px-4 py-3 text-center">不限</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-3 text-slate-700 font-medium">段落级深度分析</td>
+                                <td class="px-4 py-3 text-center text-slate-300"><i class="fa-solid fa-xmark"></i></td>
+                                <td class="px-4 py-3 text-center bg-blue-50/30 text-green-600"><i class="fa-solid fa-check"></i></td>
+                                <td class="px-4 py-3 text-center text-green-600"><i class="fa-solid fa-check"></i></td>
+                                <td class="px-4 py-3 text-center text-green-600"><i class="fa-solid fa-check"></i></td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-3 text-slate-700 font-medium">AI 模型溯源</td>
+                                <td class="px-4 py-3 text-center text-slate-300"><i class="fa-solid fa-xmark"></i></td>
+                                <td class="px-4 py-3 text-center bg-blue-50/30 text-green-600"><i class="fa-solid fa-check"></i></td>
+                                <td class="px-4 py-3 text-center text-green-600"><i class="fa-solid fa-check"></i></td>
+                                <td class="px-4 py-3 text-center text-green-600"><i class="fa-solid fa-check"></i></td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-3 text-slate-700 font-medium">批量检测</td>
+                                <td class="px-4 py-3 text-center text-slate-300"><i class="fa-solid fa-xmark"></i></td>
+                                <td class="px-4 py-3 text-center bg-blue-50/30">100条/次</td>
+                                <td class="px-4 py-3 text-center">500条/次</td>
+                                <td class="px-4 py-3 text-center">不限</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-3 text-slate-700 font-medium">API 接入</td>
+                                <td class="px-4 py-3 text-center text-slate-300"><i class="fa-solid fa-xmark"></i></td>
+                                <td class="px-4 py-3 text-center bg-blue-50/30 text-slate-300"><i class="fa-solid fa-xmark"></i></td>
+                                <td class="px-4 py-3 text-center text-green-600"><i class="fa-solid fa-check"></i></td>
+                                <td class="px-4 py-3 text-center text-green-600"><i class="fa-solid fa-check"></i></td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-3 text-slate-700 font-medium">报告导出</td>
+                                <td class="px-4 py-3 text-center text-slate-300"><i class="fa-solid fa-xmark"></i></td>
+                                <td class="px-4 py-3 text-center bg-blue-50/30 text-green-600">PDF</td>
+                                <td class="px-4 py-3 text-center text-green-600">PDF / JSON</td>
+                                <td class="px-4 py-3 text-center text-green-600">全格式</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-3 text-slate-700 font-medium">私有化部署</td>
+                                <td class="px-4 py-3 text-center text-slate-300"><i class="fa-solid fa-xmark"></i></td>
+                                <td class="px-4 py-3 text-center bg-blue-50/30 text-slate-300"><i class="fa-solid fa-xmark"></i></td>
+                                <td class="px-4 py-3 text-center text-slate-300"><i class="fa-solid fa-xmark"></i></td>
+                                <td class="px-4 py-3 text-center text-green-600"><i class="fa-solid fa-check"></i></td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-3 text-slate-700 font-medium">技术支持</td>
+                                <td class="px-4 py-3 text-center">文档</td>
+                                <td class="px-4 py-3 text-center bg-blue-50/30">邮件</td>
+                                <td class="px-4 py-3 text-center">工作日响应</td>
+                                <td class="px-4 py-3 text-center">7×24 专属</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <div class="mt-20 max-w-3xl mx-auto text-left">
+            <h2 class="text-2xl font-bold text-slate-900 mb-8 text-center">常见问题</h2>
+            <div class="space-y-4">
+                <div class="bg-white rounded-xl border border-slate-200 p-5">
+                    <h3 class="font-bold text-slate-800 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-question text-blue-500"></i>
+                        免费版有什么限制？
+                    </h3>
+                    <p class="text-sm text-slate-600">免费版每日可进行 100 次文本检测和 20 次图片/链接检测，使用基础检测模型，不支持段落级深度分析和 API 接入。适合个人体验和轻度使用。</p>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 p-5">
+                    <h3 class="font-bold text-slate-800 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-question text-blue-500"></i>
+                        API 版和专业版有什么区别？
+                    </h3>
+                    <p class="text-sm text-slate-600">专业版适合通过网页界面进行检测的个人用户和自媒体从业者。API 版面向需要系统集成的开发者和企业，提供 RESTful API 接口、多语言 SDK 和 Webhook 回调。</p>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 p-5">
+                    <h3 class="font-bold text-slate-800 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-question text-blue-500"></i>
+                        检测数据是否会被保留？
+                    </h3>
+                    <p class="text-sm text-slate-600">免费版和专业版的检测数据保留 30 天。API 版不保留请求数据，仅保留调用日志。企业版可按需配置数据保留策略。</p>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 p-5">
+                    <h3 class="font-bold text-slate-800 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-question text-blue-500"></i>
+                        支持哪些平台的内容检测？
+                    </h3>
+                    <p class="text-sm text-slate-600">目前支持小红书、抖音、快手、淘宝、京东、拼多多、微信公众号、微博等主流平台的内容检测。链接检测会自动识别平台类型并优化检测策略。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 合作机构 -->
+        <div class="mt-20 pt-10 border-t border-gray-200">
+            <p class="text-sm text-gray-400 font-medium uppercase tracking-widest mb-6">深受以下机构与平台信赖</p>
+            <div class="flex flex-wrap justify-center gap-8 md:gap-16 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
+                <div class="flex items-center gap-2 text-lg font-bold text-slate-700"><i class="fa-solid fa-building"></i> XX科技</div>
+                <div class="flex items-center gap-2 text-lg font-bold text-slate-700"><i class="fa-solid fa-users"></i> MCN TOP</div>
+                <div class="flex items-center gap-2 text-lg font-bold text-slate-700"><i class="fa-solid fa-shield"></i> 安全联盟</div>
+                <div class="flex items-center gap-2 text-lg font-bold text-slate-700"><i class="fa-solid fa-newspaper"></i> 新闻核查</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-10 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center text-sm">
+            <div class="flex items-center gap-2 mb-4 md:mb-0">
+                <div class="w-7 h-7 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                    <i class="fa-solid fa-shield-halved text-white text-xs"></i>
+                </div>
+                <span class="font-bold text-white">TruthLens 真识</span>
+            </div>
+            <span>&copy; 2026 TruthLens. All rights reserved.</span>
+        </div>
+    </footer>
+
+    <script>
+        function toggleBilling() {
+            const isYearly = document.getElementById('billing-toggle').checked;
+            const prices = document.querySelectorAll('.price-display');
+            const periods = document.querySelectorAll('.period-display');
+            
+            prices.forEach(price => {
+                const amount = isYearly ? price.dataset.yearly : price.dataset.monthly;
+                price.style.opacity = 0;
+                setTimeout(() => {
+                    price.innerText = '¥' + amount;
+                    price.style.opacity = 1;
+                }, 150);
+            });
+
+            periods.forEach(period => {
+                period.style.opacity = 0;
+                setTimeout(() => {
+                    period.innerText = isYearly ? '/ 年' : '/ 月';
+                    period.style.opacity = 1;
+                }, 150);
+            });
+
+            if(isYearly) {
+                document.getElementById('yearly-label').classList.replace('text-gray-500', 'text-gray-900');
+                document.getElementById('monthly-label').classList.replace('text-gray-900', 'text-gray-500');
+            } else {
+                document.getElementById('yearly-label').classList.replace('text-gray-900', 'text-gray-500');
+                document.getElementById('monthly-label').classList.replace('text-gray-500', 'text-gray-900');
+            }
+        }
+    </script>
+</body>
+</html>

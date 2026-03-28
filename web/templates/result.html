@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>检测结果 - TruthLens 真识</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', system-ui, sans-serif; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+        /* 环形进度条 */
+        .circular-progress {
+            position: relative;
+            width: 160px;
+            height: 160px;
+        }
+        .circular-progress svg {
+            transform: rotate(-90deg);
+        }
+        .circular-progress .progress-ring {
+            stroke-dasharray: 440;
+            stroke-dashoffset: 440;
+            animation: progressFill 1.5s ease-out forwards;
+            stroke-linecap: round;
+        }
+        @keyframes progressFill {
+            to { stroke-dashoffset: 32; }
+        }
+        .circular-progress .percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        /* 风险条 */
+        .risk-bar {
+            background: linear-gradient(90deg, #22c55e 0%, #eab308 33%, #f97316 66%, #ef4444 100%);
+            border-radius: 999px;
+            height: 8px;
+            position: relative;
+        }
+        .risk-indicator {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            position: absolute;
+            top: -4px;
+            transition: left 1s ease-out;
+        }
+
+        /* 段落高亮 */
+        .ai-highlight {
+            background: linear-gradient(180deg, transparent 60%, rgba(239, 68, 68, 0.15) 60%);
+        }
+        .ai-highlight-medium {
+            background: linear-gradient(180deg, transparent 60%, rgba(234, 179, 8, 0.15) 60%);
+        }
+
+        /* 卡片入场动画 */
+        .result-card {
+            animation: cardSlide 0.5s ease-out forwards;
+            opacity: 0;
+        }
+        @keyframes cardSlide {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .result-card:nth-child(1) { animation-delay: 0.1s; }
+        .result-card:nth-child(2) { animation-delay: 0.2s; }
+        .result-card:nth-child(3) { animation-delay: 0.3s; }
+        .result-card:nth-child(4) { animation-delay: 0.4s; }
+
+        /* 闪烁标签 */
+        .blink-tag {
+            animation: blink 2s ease-in-out infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* 工具提示 */
+        .tooltip-container { position: relative; }
+        .tooltip-container:hover .tooltip-text {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .tooltip-text {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(5px);
+            background: #1e293b;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-slate-800 min-h-screen">
+
+    <!-- 顶部导航 -->
+    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-slate-200/60">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
+                        <i class="fa-solid fa-shield-halved text-white text-sm"></i>
+                    </div>
+                    <span class="font-bold text-xl text-slate-800">TruthLens</span>
+                </a>
+                <div class="hidden md:flex items-center gap-2 text-sm text-slate-400">
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                    <a href="detect.html" class="hover:text-blue-600 transition">检测中心</a>
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                    <span class="text-slate-700 font-medium">检测结果</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button class="text-sm text-slate-500 hover:text-slate-800 transition flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-slate-100">
+                    <i class="fa-solid fa-download"></i>
+                    <span class="hidden md:inline">导出报告</span>
+                </button>
+                <button class="text-sm text-slate-500 hover:text-slate-800 transition flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-slate-100">
+                    <i class="fa-solid fa-share-nodes"></i>
+                    <span class="hidden md:inline">分享</span>
+                </button>
+                <a href="detect.html" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition shadow-md shadow-blue-600/20 flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> 新检测
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <!-- 检测状态标识 -->
+        <div class="flex items-center gap-3 mb-6">
+            <span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
+                <i class="fa-solid fa-circle-check"></i> 检测完成
+            </span>
+            <span class="text-sm text-slate-400">报告编号: TL-2026030201 · 耗时 1.8s · 2026年3月2日 14:32</span>
+        </div>
+
+        <div class="grid lg:grid-cols-12 gap-8">
+            <!-- 左侧主结果 -->
+            <div class="lg:col-span-8 space-y-6">
+
+                <!-- 核心结果卡片 -->
+                <div class="result-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="bg-gradient-to-r from-red-50 to-orange-50 p-6 border-b border-red-100">
+                        <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
+                            <!-- 环形图 -->
+                            <div class="circular-progress flex-shrink-0">
+                                <svg width="160" height="160">
+                                    <circle cx="80" cy="80" r="70" fill="none" stroke="#fee2e2" stroke-width="10"/>
+                                    <circle cx="80" cy="80" r="70" fill="none" stroke="url(#gradient)" stroke-width="10" class="progress-ring"/>
+                                    <defs>
+                                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" stop-color="#ef4444"/>
+                                            <stop offset="100%" stop-color="#f97316"/>
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                <div class="percentage">
+                                    <div class="text-4xl font-extrabold text-red-600">92.7%</div>
+                                    <div class="text-xs text-red-400 font-medium">AI 概率</div>
+                                </div>
+                            </div>
+
+                            <!-- 判定结果 -->
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <h2 class="text-2xl font-bold text-slate-900">AI 生成内容</h2>
+                                    <span class="blink-tag bg-red-500 text-white text-sm font-bold px-4 py-1 rounded-full">是</span>
+                                </div>
+                                <p class="text-sm text-slate-600 leading-relaxed mb-4">
+                                    该内容被判定为 <strong>高度疑似 AI 生成</strong>，文本特征与 GPT-4 / ChatGPT 生成模式高度匹配。多项分析指标显示非人工创作特征。
+                                </p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="bg-red-100 text-red-700 text-xs font-semibold px-3 py-1 rounded-full">GPT-4 特征匹配</span>
+                                    <span class="bg-orange-100 text-orange-700 text-xs font-semibold px-3 py-1 rounded-full">困惑度异常低</span>
+                                    <span class="bg-yellow-100 text-yellow-700 text-xs font-semibold px-3 py-1 rounded-full">词汇分布均匀</span>
+                                    <span class="bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full">句式模式化</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 传播风险判级 -->
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation text-orange-500"></i> 传播风险判级
+                            </h3>
+                            <span class="bg-orange-100 text-orange-700 text-sm font-bold px-4 py-1.5 rounded-full flex items-center gap-1.5">
+                                <i class="fa-solid fa-signal"></i> L3 · 高风险
+                            </span>
+                        </div>
+                        
+                        <!-- 风险条 -->
+                        <div class="mb-4">
+                            <div class="risk-bar">
+                                <div class="risk-indicator bg-orange-500" style="left: 72%"></div>
+                            </div>
+                            <div class="flex justify-between text-xs text-slate-400 mt-2">
+                                <span>L1 低风险</span>
+                                <span>L2 中风险</span>
+                                <span>L3 高风险</span>
+                                <span>L4 极高</span>
+                            </div>
+                        </div>
+
+                        <!-- 风险维度评分 -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                            <div class="bg-slate-50 rounded-xl p-4 text-center">
+                                <div class="text-2xl font-bold text-red-500 mb-1">85</div>
+                                <div class="text-xs text-slate-500">虚假宣传风险</div>
+                                <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2">
+                                    <div class="bg-red-500 h-1.5 rounded-full" style="width:85%"></div>
+                                </div>
+                            </div>
+                            <div class="bg-slate-50 rounded-xl p-4 text-center">
+                                <div class="text-2xl font-bold text-orange-500 mb-1">72</div>
+                                <div class="text-xs text-slate-500">传播扩散风险</div>
+                                <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2">
+                                    <div class="bg-orange-500 h-1.5 rounded-full" style="width:72%"></div>
+                                </div>
+                            </div>
+                            <div class="bg-slate-50 rounded-xl p-4 text-center">
+                                <div class="text-2xl font-bold text-yellow-500 mb-1">58</div>
+                                <div class="text-xs text-slate-500">消费误导风险</div>
+                                <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2">
+                                    <div class="bg-yellow-500 h-1.5 rounded-full" style="width:58%"></div>
+                                </div>
+                            </div>
+                            <div class="bg-slate-50 rounded-xl p-4 text-center">
+                                <div class="text-2xl font-bold text-blue-500 mb-1">40</div>
+                                <div class="text-xs text-slate-500">平台违规风险</div>
+                                <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2">
+                                    <div class="bg-blue-500 h-1.5 rounded-full" style="width:40%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 段落级分析 -->
+                <div class="result-card bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-paragraph text-blue-500"></i> 段落级 AI 检测分析
+                    </h3>
+                    <p class="text-xs text-slate-400 mb-4">红色高亮为高度疑似AI生成段落，黄色为中度疑似</p>
+
+                    <div class="space-y-4 text-sm leading-relaxed text-slate-700">
+                        <div class="p-4 rounded-xl border border-red-200 bg-red-50/30">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded">段落 1 · AI 概率 96%</span>
+                                <span class="text-xs text-slate-400">GPT-4 特征</span>
+                            </div>
+                            <p><span class="ai-highlight">这款面霜真的太好用了！作为一个干皮星人，我已经用了整整三个月了。</span>质地非常轻薄，很容易推开，<span class="ai-highlight">上脸之后完全不会有厚重感，而且保湿效果真的绝了！</span>早上涂完一整天都不会觉得脸干，连我的法令纹都淡了不少。</p>
+                        </div>
+
+                        <div class="p-4 rounded-xl border border-red-200 bg-red-50/30">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded">段落 2 · AI 概率 94%</span>
+                                <span class="text-xs text-slate-400">GPT-4 特征</span>
+                            </div>
+                            <p><span class="ai-highlight">成分方面也是非常能打的，含有5%的烟酰胺和玻尿酸钠，</span>这两个成分搭配在一起简直就是干皮的救星。<span class="ai-highlight">而且它还添加了积雪草提取物，可以帮助修护肌肤屏障，</span>敏感肌也可以放心用。</p>
+                        </div>
+
+                        <div class="p-4 rounded-xl border border-yellow-200 bg-yellow-50/30">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded">段落 3 · AI 概率 65%</span>
+                                <span class="text-xs text-slate-400">混合特征</span>
+                            </div>
+                            <p>价格方面，<span class="ai-highlight-medium">一瓶50ml大概在299元左右，性价比真的很高。</span>而且现在活动期间买一送一，真的太划算了！强烈推荐给所有干皮姐妹们，绝对不会踩雷的～</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 模型特征分析 -->
+                <div class="result-card bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-bar text-indigo-500"></i> AI 模型特征分析
+                    </h3>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- 疑似来源模型 -->
+                        <div>
+                            <div class="text-sm font-medium text-slate-600 mb-3">疑似生成模型</div>
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-slate-700 font-medium">GPT-4 / ChatGPT</span>
+                                        <span class="text-red-600 font-bold">78%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 rounded-full h-2">
+                                        <div class="bg-red-500 h-2 rounded-full" style="width: 78%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-slate-700 font-medium">文心一言</span>
+                                        <span class="text-orange-600 font-bold">12%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 rounded-full h-2">
+                                        <div class="bg-orange-400 h-2 rounded-full" style="width: 12%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-slate-700 font-medium">通义千问</span>
+                                        <span class="text-yellow-600 font-bold">6%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 rounded-full h-2">
+                                        <div class="bg-yellow-400 h-2 rounded-full" style="width: 6%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-slate-700 font-medium">其他 / 人工</span>
+                                        <span class="text-green-600 font-bold">4%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 rounded-full h-2">
+                                        <div class="bg-green-400 h-2 rounded-full" style="width: 4%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 语言特征指标 -->
+                        <div>
+                            <div class="text-sm font-medium text-slate-600 mb-3">语言特征指标</div>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2 tooltip-container">
+                                        <span class="text-sm text-slate-700">困惑度 (Perplexity)</span>
+                                        <i class="fa-solid fa-circle-question text-slate-300 text-xs cursor-help"></i>
+                                        <span class="tooltip-text">越低越可能是 AI 生成</span>
+                                    </div>
+                                    <span class="text-sm font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded">12.3 (极低)</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2 tooltip-container">
+                                        <span class="text-sm text-slate-700">突发度 (Burstiness)</span>
+                                        <i class="fa-solid fa-circle-question text-slate-300 text-xs cursor-help"></i>
+                                        <span class="tooltip-text">人类写作通常变化较大</span>
+                                    </div>
+                                    <span class="text-sm font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded">0.23 (极低)</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2 tooltip-container">
+                                        <span class="text-sm text-slate-700">词汇多样性</span>
+                                        <i class="fa-solid fa-circle-question text-slate-300 text-xs cursor-help"></i>
+                                        <span class="tooltip-text">AI 生成通常词汇分布更均匀</span>
+                                    </div>
+                                    <span class="text-sm font-bold text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded">0.67 (中等)</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2 tooltip-container">
+                                        <span class="text-sm text-slate-700">句式重复率</span>
+                                        <i class="fa-solid fa-circle-question text-slate-300 text-xs cursor-help"></i>
+                                        <span class="tooltip-text">AI 易产生重复句式结构</span>
+                                    </div>
+                                    <span class="text-sm font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded">38% (偏高)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 处置建议 -->
+                <div class="result-card bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-check text-emerald-500"></i> 处置建议
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3 p-4 bg-red-50 rounded-xl border border-red-100">
+                            <div class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fa-solid fa-flag text-white text-xs"></i>
+                            </div>
+                            <div>
+                                <div class="text-sm font-bold text-red-800 mb-1">标记为 AI 生成内容</div>
+                                <p class="text-sm text-red-700">根据平台规则要求，建议对该内容进行 AI 生成标识标注，避免误导消费者。</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 p-4 bg-orange-50 rounded-xl border border-orange-100">
+                            <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fa-solid fa-eye text-white text-xs"></i>
+                            </div>
+                            <div>
+                                <div class="text-sm font-bold text-orange-800 mb-1">人工复核</div>
+                                <p class="text-sm text-orange-700">建议安排人工审核该内容中的产品功效描述，确认是否涉及夸大宣传。</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                            <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fa-solid fa-scale-balanced text-white text-xs"></i>
+                            </div>
+                            <div>
+                                <div class="text-sm font-bold text-blue-800 mb-1">合规风险提醒</div>
+                                <p class="text-sm text-blue-700">该类型内容需遵守《互联网广告管理办法》及各平台 AI 内容标注政策。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧信息面板 -->
+            <div class="lg:col-span-4 space-y-6">
+                <!-- 基本信息 -->
+                <div class="result-card bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                    <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-circle-info text-blue-500"></i> 检测详情
+                    </h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between py-2 border-b border-slate-100">
+                            <span class="text-slate-500">内容类型</span>
+                            <span class="font-medium text-slate-800">文本</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-slate-100">
+                            <span class="text-slate-500">来源平台</span>
+                            <span class="font-medium text-slate-800 flex items-center gap-1">
+                                <i class="fa-solid fa-book-open text-red-400 text-xs"></i> 小红书
+                            </span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-slate-100">
+                            <span class="text-slate-500">内容长度</span>
+                            <span class="font-medium text-slate-800">326 字</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-slate-100">
+                            <span class="text-slate-500">检测模型</span>
+                            <span class="font-medium text-slate-800">TruthLens v2.0</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-slate-100">
+                            <span class="text-slate-500">检测耗时</span>
+                            <span class="font-medium text-slate-800">1.8 秒</span>
+                        </div>
+                        <div class="flex justify-between py-2">
+                            <span class="text-slate-500">检测时间</span>
+                            <span class="font-medium text-slate-800">2026-03-02 14:32</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI 判定摘要 -->
+                <div class="result-card bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                    <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-robot text-purple-500"></i> AI 判定摘要
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 bg-red-50 rounded-xl">
+                            <span class="text-sm text-slate-700">AI 生成</span>
+                            <span class="text-sm font-bold text-red-600">是 (92.7%)</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-orange-50 rounded-xl">
+                            <span class="text-sm text-slate-700">风险等级</span>
+                            <span class="text-sm font-bold text-orange-600">L3 高风险</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                            <span class="text-sm text-slate-700">疑似模型</span>
+                            <span class="text-sm font-bold text-slate-700">GPT-4</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                            <span class="text-sm text-slate-700">内容分类</span>
+                            <span class="text-sm font-bold text-slate-700">电商种草</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="result-card bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                    <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-gear text-slate-400"></i> 操作
+                    </h3>
+                    <div class="space-y-2">
+                        <button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-200 hover:bg-blue-50 hover:border-blue-200 transition text-sm text-left">
+                            <i class="fa-solid fa-file-pdf text-red-500 w-5 text-center"></i>
+                            <span class="font-medium text-slate-700">导出 PDF 报告</span>
+                        </button>
+                        <button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-200 hover:bg-blue-50 hover:border-blue-200 transition text-sm text-left">
+                            <i class="fa-solid fa-code text-blue-500 w-5 text-center"></i>
+                            <span class="font-medium text-slate-700">查看 JSON 数据</span>
+                        </button>
+                        <button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-200 hover:bg-blue-50 hover:border-blue-200 transition text-sm text-left">
+                            <i class="fa-solid fa-copy text-green-500 w-5 text-center"></i>
+                            <span class="font-medium text-slate-700">复制检测结论</span>
+                        </button>
+                        <button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-200 hover:bg-blue-50 hover:border-blue-200 transition text-sm text-left">
+                            <i class="fa-solid fa-flag text-orange-500 w-5 text-center"></i>
+                            <span class="font-medium text-slate-700">反馈误判</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- API 调用示例 -->
+                <div class="result-card bg-slate-900 rounded-2xl p-5 text-white">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-bold text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-terminal text-green-400"></i> API 调用
+                        </h3>
+                        <button class="text-xs text-slate-400 hover:text-white transition">
+                            <i class="fa-solid fa-copy mr-1"></i> 复制
+                        </button>
+                    </div>
+                    <pre class="text-xs text-slate-300 overflow-x-auto"><code>{
+  "ai_generated": true,
+  "ai_probability": 0.927,
+  "risk_level": "L3",
+  "risk_score": 72,
+  "suspected_model": "GPT-4",
+  "content_type": "ecommerce_review"
+}</code></pre>
+                    <a href="api.html" class="mt-3 text-xs text-blue-400 hover:text-blue-300 font-medium inline-flex items-center gap-1">
+                        查看完整 API 文档 <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>

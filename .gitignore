@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# 虚拟环境
+venv/
+.venv/
+env/
+
+# 上传临时文件
+uploads/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 模型文件（不上传到 GitHub）
+models/
+checkpoints/*
+!checkpoints/.gitkeep
+*.bin
+*.safetensors
+*.gguf
+
+# 数据集（不上传到 GitHub）
+data/
+*.jsonl

@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruthLens 真识 - AI内容检测与传播风险评估平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        
+        /* 渐变背景动画 */
+        .hero-gradient {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 30%, #0f172a 60%, #1a1a2e 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-gradient::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 30%, rgba(139, 92, 246, 0.06) 0%, transparent 40%),
+                        radial-gradient(circle at 50% 80%, rgba(14, 165, 233, 0.05) 0%, transparent 40%);
+            animation: float 20s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(2%, -2%) rotate(1deg); }
+            66% { transform: translate(-1%, 1%) rotate(-1deg); }
+        }
+
+        /* 网格背景 */
+        .grid-bg {
+            background-image: linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        /* 光晕扫描动画 */
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.6), transparent);
+            animation: scan 3s ease-in-out infinite;
+        }
+        @keyframes scan {
+            0% { top: 0; opacity: 0; }
+            50% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        /* 卡片悬浮效果 */
+        .feature-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .feature-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px -12px rgba(0,0,0,0.15);
+        }
+
+        /* 统计数字动画 */
+        .stat-number {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* 平台标签样式 */
+        .platform-tag {
+            transition: all 0.2s ease;
+        }
+        .platform-tag:hover {
+            transform: scale(1.05);
+        }
+
+        /* 按钮微光效果 */
+        .btn-glow {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-glow::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(45deg);
+            animation: btnShimmer 3s infinite;
+        }
+        @keyframes btnShimmer {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+
+        /* 风险指示器 */
+        .risk-meter {
+            background: linear-gradient(90deg, #22c55e 0%, #eab308 40%, #f97316 70%, #ef4444 100%);
+            border-radius: 999px;
+            height: 6px;
+        }
+
+        .fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a5f' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white text-slate-800">
+
+    <!-- 顶部导航 -->
+    <nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/60">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="index.html" class="flex items-center gap-2.5">
+                <div class="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
+                    <i class="fa-solid fa-shield-halved text-white text-sm"></i>
+                </div>
+                <span class="font-bold text-xl text-slate-800">TruthLens</span>
+                <span class="text-xs text-slate-400 font-medium hidden sm:inline">真识</span>
+            </a>
+
+            <div class="hidden md:flex items-center gap-8">
+                <a href="detect.html" class="text-sm font-medium text-slate-600 hover:text-blue-600 transition">检测中心</a>
+                <a href="api.html" class="text-sm font-medium text-slate-600 hover:text-blue-600 transition">API 接入</a>
+                <a href="pricing.html" class="text-sm font-medium text-slate-600 hover:text-blue-600 transition">定价方案</a>
+                <a href="dashboard.html" class="text-sm font-medium text-slate-600 hover:text-blue-600 transition">控制台</a>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button class="text-sm font-medium text-slate-600 hover:text-slate-800 transition px-3 py-2">登录</button>
+                <a href="detect.html" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition shadow-md shadow-blue-600/20">
+                    免费检测
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero 区域 -->
+    <section class="hero-gradient grid-bg min-h-screen flex items-center pt-16 relative">
+        <div class="scan-line"></div>
+        <div class="max-w-7xl mx-auto px-6 py-20 relative z-10">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <!-- 左侧文案 -->
+                <div class="fade-in">
+                    <div class="flex items-center gap-2 mb-6">
+                        <span class="bg-blue-500/10 text-blue-400 text-xs font-bold px-3 py-1.5 rounded-full border border-blue-500/20">
+                            <i class="fa-solid fa-sparkles mr-1"></i> 全新升级 v2.0
+                        </span>
+                        <span class="bg-emerald-500/10 text-emerald-400 text-xs font-medium px-3 py-1.5 rounded-full border border-emerald-500/20">
+                            准确率 99.2%
+                        </span>
+                    </div>
+                    
+                    <h1 class="text-4xl md:text-6xl font-extrabold text-white leading-tight mb-6">
+                        AI内容一眼<br>
+                        <span class="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">识别真伪</span>
+                    </h1>
+                    
+                    <p class="text-lg text-slate-400 leading-relaxed mb-8 max-w-xl">
+                        为小红书、抖音、电商等平台提供专业的 AI 生成内容检测与传播风险评估服务。
+                        支持文字、图文、链接、截图等多种输入，一键判定内容真伪与风险等级。
+                    </p>
+
+                    <div class="flex flex-wrap gap-4 mb-10">
+                        <a href="detect.html" class="btn-glow bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 rounded-xl font-semibold shadow-xl shadow-blue-600/25 transition flex items-center gap-2">
+                            <i class="fa-solid fa-magnifying-glass-chart"></i>
+                            开始检测
+                        </a>
+                        <a href="api.html" class="bg-white/5 hover:bg-white/10 text-white px-8 py-3.5 rounded-xl font-semibold border border-white/10 transition flex items-center gap-2">
+                            <i class="fa-solid fa-code"></i>
+                            API 接入
+                        </a>
+                    </div>
+
+                    <!-- 平台支持标签 -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs text-slate-500 mr-1">适用平台：</span>
+                        <span class="platform-tag bg-red-500/10 text-red-400 text-xs font-medium px-3 py-1 rounded-full border border-red-500/15">
+                            <i class="fa-solid fa-book-open mr-1"></i> 小红书
+                        </span>
+                        <span class="platform-tag bg-pink-500/10 text-pink-400 text-xs font-medium px-3 py-1 rounded-full border border-pink-500/15">
+                            <i class="fa-brands fa-tiktok mr-1"></i> 抖音
+                        </span>
+                        <span class="platform-tag bg-blue-500/10 text-blue-400 text-xs font-medium px-3 py-1 rounded-full border border-blue-500/15">
+                            <i class="fa-solid fa-video mr-1"></i> 快手
+                        </span>
+                        <span class="platform-tag bg-orange-500/10 text-orange-400 text-xs font-medium px-3 py-1 rounded-full border border-orange-500/15">
+                            <i class="fa-solid fa-shopping-bag mr-1"></i> 淘宝
+                        </span>
+                        <span class="platform-tag bg-yellow-500/10 text-yellow-400 text-xs font-medium px-3 py-1 rounded-full border border-yellow-500/15">
+                            <i class="fa-solid fa-store mr-1"></i> 拼多多
+                        </span>
+                        <span class="platform-tag bg-green-500/10 text-green-400 text-xs font-medium px-3 py-1 rounded-full border border-green-500/15">
+                            <i class="fa-brands fa-weixin mr-1"></i> 微信公众号
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 右侧演示卡片 -->
+                <div class="hidden lg:block fade-in" style="animation-delay: 0.3s;">
+                    <div class="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-6 shadow-2xl">
+                        <!-- 模拟检测结果 -->
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            </div>
+                            <span class="text-xs text-slate-500">TruthLens 检测报告</span>
+                        </div>
+
+                        <div class="space-y-4">
+                            <!-- AI检测结果 -->
+                            <div class="bg-slate-900/60 rounded-xl p-5 border border-slate-700/30">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="text-sm text-slate-400">AI 生成内容</span>
+                                    <span class="bg-red-500/15 text-red-400 text-sm font-bold px-3 py-1 rounded-full">是 · 92.7%</span>
+                                </div>
+                                <div class="w-full bg-slate-700 rounded-full h-2 mb-1">
+                                    <div class="bg-gradient-to-r from-red-500 to-orange-500 h-2 rounded-full" style="width: 92.7%"></div>
+                                </div>
+                            </div>
+
+                            <!-- 风险等级 -->
+                            <div class="bg-slate-900/60 rounded-xl p-5 border border-slate-700/30">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="text-sm text-slate-400">传播风险判级</span>
+                                    <span class="bg-orange-500/15 text-orange-400 text-sm font-bold px-3 py-1 rounded-full">
+                                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> 高风险
+                                    </span>
+                                </div>
+                                <div class="risk-meter w-full relative mb-2">
+                                    <div class="absolute w-3 h-3 bg-white rounded-full shadow-lg border-2 border-orange-500 -top-[3px]" style="left: 72%"></div>
+                                </div>
+                                <div class="flex justify-between text-xs text-slate-500">
+                                    <span>低</span><span>中</span><span>高</span><span>极高</span>
+                                </div>
+                            </div>
+
+                            <!-- 分析标签 -->
+                            <div class="flex flex-wrap gap-2">
+                                <span class="bg-red-500/10 text-red-400 text-xs px-2.5 py-1 rounded-full">GPT-4 生成特征</span>
+                                <span class="bg-yellow-500/10 text-yellow-400 text-xs px-2.5 py-1 rounded-full">高传播倾向</span>
+                                <span class="bg-blue-500/10 text-blue-400 text-xs px-2.5 py-1 rounded-full">电商文案</span>
+                                <span class="bg-purple-500/10 text-purple-400 text-xs px-2.5 py-1 rounded-full">可能误导消费者</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 数据统计 -->
+    <section class="py-16 bg-slate-50 border-y border-slate-200">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <div>
+                    <div class="stat-number text-4xl font-extrabold mb-1">99.2%</div>
+                    <div class="text-sm text-slate-500">检测准确率</div>
+                </div>
+                <div>
+                    <div class="stat-number text-4xl font-extrabold mb-1">5M+</div>
+                    <div class="text-sm text-slate-500">已处理内容</div>
+                </div>
+                <div>
+                    <div class="stat-number text-4xl font-extrabold mb-1">200+</div>
+                    <div class="text-sm text-slate-500">企业客户</div>
+                </div>
+                <div>
+                    <div class="stat-number text-4xl font-extrabold mb-1">&lt;2s</div>
+                    <div class="text-sm text-slate-500">平均检测耗时</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 核心功能 -->
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="text-sm text-blue-600 font-semibold uppercase tracking-wider">核心功能</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mt-3 mb-4">多维度 AI 内容检测能力</h2>
+                <p class="text-slate-500 max-w-2xl mx-auto">涵盖文本、图片、视频截图、链接等多种内容形态，全方位识别 AI 生成内容并评估传播风险</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- 文本检测 -->
+                <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 shadow-sm">
+                    <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-5">
+                        <i class="fa-solid fa-file-lines text-blue-600 text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-lg text-slate-800 mb-2">文本检测</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed mb-4">粘贴或输入任意文本内容，智能识别 ChatGPT、文心一言、通义千问等主流 AI 模型生成的文字。</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">笔记文案</span>
+                        <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">商品描述</span>
+                        <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">评论评测</span>
+                    </div>
+                </div>
+
+                <!-- 图文检测 -->
+                <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 shadow-sm">
+                    <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center mb-5">
+                        <i class="fa-solid fa-image text-purple-600 text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-lg text-slate-800 mb-2">图文检测</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed mb-4">上传图片或图文帖子截图，同时分析图片是否 AI 生成（Midjourney、DALL·E）以及配文的真实性。</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">种草笔记</span>
+                        <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">AI 绘图</span>
+                        <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">产品图</span>
+                    </div>
+                </div>
+
+                <!-- 链接检测 -->
+                <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 shadow-sm">
+                    <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center mb-5">
+                        <i class="fa-solid fa-link text-green-600 text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-lg text-slate-800 mb-2">链接检测</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed mb-4">粘贴小红书、抖音、淘宝等平台的内容链接，自动抓取并分析内容真实性与传播风险。</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">小红书链接</span>
+                        <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">抖音分享</span>
+                        <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">商品页面</span>
+                    </div>
+                </div>
+
+                <!-- 截图检测 -->
+                <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 shadow-sm">
+                    <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center mb-5">
+                        <i class="fa-solid fa-camera text-orange-600 text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-lg text-slate-800 mb-2">截图检测</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed mb-4">上传内容截图，OCR 自动提取文字，结合图片分析综合判定 AI 生成概率与风险。</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">聊天截图</span>
+                        <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">页面截图</span>
+                        <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">评论区截图</span>
+                    </div>
+                </div>
+
+                <!-- 批量检测 -->
+                <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 shadow-sm">
+                    <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-5">
+                        <i class="fa-solid fa-layer-group text-indigo-600 text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-lg text-slate-800 mb-2">批量检测</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed mb-4">上传 CSV/Excel 文件或批量粘贴链接，一次性检测大量内容，导出完整报告。适合企业审核场景。</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">CSV 上传</span>
+                        <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">批量链接</span>
+                        <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">报告导出</span>
+                    </div>
+                </div>
+
+                <!-- API接入 -->
+                <div class="feature-card bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-7 border border-slate-700 shadow-sm text-white">
+                    <div class="w-12 h-12 bg-blue-600/20 rounded-xl flex items-center justify-center mb-5">
+                        <i class="fa-solid fa-code text-blue-400 text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">API 接入</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed mb-4">RESTful API 接口，支持企业客户、MCN 机构系统集成，实时检测内容真实性。</p>
+                    <a href="api.html" class="inline-flex items-center gap-1.5 text-sm text-blue-400 hover:text-blue-300 font-medium transition">
+                        查看文档 <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 检测流程 -->
+    <section class="py-20 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="text-sm text-blue-600 font-semibold uppercase tracking-wider">工作流程</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mt-3 mb-4">3 步完成内容检测</h2>
+                <p class="text-slate-500">从输入到获取专业报告，简单快捷</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 relative">
+                <!-- 连接线 -->
+                <div class="hidden md:block absolute top-20 left-1/3 right-1/3 h-0.5 bg-gradient-to-r from-blue-200 via-blue-300 to-blue-200"></div>
+
+                <div class="text-center relative">
+                    <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-600/20 text-white text-xl font-bold relative z-10">1</div>
+                    <h3 class="font-bold text-lg text-slate-800 mb-2">输入内容</h3>
+                    <p class="text-sm text-slate-500">粘贴文字、上传图片、输入链接或截图</p>
+                </div>
+
+                <div class="text-center relative">
+                    <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-600/20 text-white text-xl font-bold relative z-10">2</div>
+                    <h3 class="font-bold text-lg text-slate-800 mb-2">AI 智能分析</h3>
+                    <p class="text-sm text-slate-500">多模型交叉验证，深度语义与特征分析</p>
+                </div>
+
+                <div class="text-center relative">
+                    <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-600/20 text-white text-xl font-bold relative z-10">3</div>
+                    <h3 class="font-bold text-lg text-slate-800 mb-2">获取报告</h3>
+                    <p class="text-sm text-slate-500">AI 概率判定 + 传播风险等级 + 详细分析</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 风险等级说明 -->
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="text-sm text-blue-600 font-semibold uppercase tracking-wider">风险判级体系</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mt-3 mb-4">AI 内容传播风险四级评估</h2>
+                <p class="text-slate-500 max-w-2xl mx-auto">基于内容类型、传播范围、受众影响、平台规则等多维度综合评判</p>
+            </div>
+
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="rounded-2xl p-6 border-2 border-green-200 bg-green-50/50">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-check text-white"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-green-800">低风险</div>
+                            <div class="text-xs text-green-600">L1 · Low</div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-green-700 leading-relaxed">AI 辅助创作，内容合规，不涉及虚假宣传或误导消费者，传播影响可控。</p>
+                </div>
+
+                <div class="rounded-2xl p-6 border-2 border-yellow-200 bg-yellow-50/50">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-minus text-white"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-yellow-800">中风险</div>
+                            <div class="text-xs text-yellow-600">L2 · Medium</div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-yellow-700 leading-relaxed">AI 生成痕迹明显，存在一定误导性，需标注 AI 生成内容，建议人工复核。</p>
+                </div>
+
+                <div class="rounded-2xl p-6 border-2 border-orange-200 bg-orange-50/50">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-triangle-exclamation text-white"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-orange-800">高风险</div>
+                            <div class="text-xs text-orange-600">L3 · High</div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-orange-700 leading-relaxed">高度疑似 AI 伪造内容，涉及虚假种草、伪评测、虚假口碑，有传播扩散风险。</p>
+                </div>
+
+                <div class="rounded-2xl p-6 border-2 border-red-200 bg-red-50/50">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-xmark text-white"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-red-800">极高风险</div>
+                            <div class="text-xs text-red-600">L4 · Critical</div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-red-700 leading-relaxed">确认 AI 伪造，涉及深度伪造、虚假新闻、诈骗信息，建议立即下架并举报。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 应用场景 -->
+    <section class="py-20 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="text-sm text-blue-600 font-semibold uppercase tracking-wider">应用场景</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mt-3 mb-4">覆盖主流内容平台</h2>
+                <p class="text-slate-500">为不同平台和角色提供定制化检测方案</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-book-open text-red-500"></i>
+                        </div>
+                        <h3 class="font-bold text-slate-800">小红书</h3>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-3">检测种草笔记、好物推荐、经验分享等内容是否 AI 生成，防范虚假种草。</p>
+                    <div class="text-xs text-slate-400">适用：MCN 机构 · 品牌方 · 平台运营</div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center">
+                            <i class="fa-brands fa-tiktok text-white"></i>
+                        </div>
+                        <h3 class="font-bold text-slate-800">抖音 / 短视频</h3>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-3">分析短视频文案、评论区、直播间话术等 AI 生成痕迹，守护内容真实性。</p>
+                    <div class="text-xs text-slate-400">适用：内容审核 · 达人筛选 · 舆情监控</div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-cart-shopping text-orange-500"></i>
+                        </div>
+                        <h3 class="font-bold text-slate-800">电商平台</h3>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-3">检测商品描述、评价评论、买家秀等内容，识别 AI 刷评与虚假好评。</p>
+                    <div class="text-xs text-slate-400">适用：淘宝 · 京东 · 拼多多 · 得物</div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i class="fa-brands fa-weixin text-green-600"></i>
+                        </div>
+                        <h3 class="font-bold text-slate-800">微信生态</h3>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-3">微信公众号文章、视频号内容、朋友圈传播内容检测，防范AI虚假信息扩散。</p>
+                    <div class="text-xs text-slate-400">适用：媒体机构 · 公关公司 · 政府部门</div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-newspaper text-blue-500"></i>
+                        </div>
+                        <h3 class="font-bold text-slate-800">新闻资讯</h3>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-3">鉴别新闻稿件、资讯报道是否由 AI 自动生成，维护新闻真实性与公信力。</p>
+                    <div class="text-xs text-slate-400">适用：新闻媒体 · 事实核查 · 学术研究</div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-building text-indigo-500"></i>
+                        </div>
+                        <h3 class="font-bold text-slate-800">企业合规</h3>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-3">企业内部内容审核系统集成，确保对外发布内容的合规性与真实性。</p>
+                    <div class="text-xs text-slate-400">适用：品牌合规 · 法律合规 · 广告审查</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="py-20 bg-gradient-to-br from-slate-900 to-slate-800 relative overflow-hidden">
+        <div class="absolute inset-0 grid-bg opacity-30"></div>
+        <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
+            <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">开始守护内容真实性</h2>
+            <p class="text-lg text-slate-400 mb-8">注册即可免费体验 100 次检测，企业用户可申请 API 接入</p>
+            <div class="flex flex-wrap gap-4 justify-center">
+                <a href="detect.html" class="btn-glow bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-xl font-semibold shadow-xl shadow-blue-600/25 transition text-lg">
+                    免费开始检测
+                </a>
+                <a href="pricing.html" class="bg-white/5 hover:bg-white/10 text-white px-8 py-4 rounded-xl font-semibold border border-white/10 transition text-lg">
+                    查看定价
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-shield-halved text-white text-xs"></i>
+                        </div>
+                        <span class="font-bold text-white">TruthLens 真识</span>
+                    </div>
+                    <p class="text-sm leading-relaxed">专业的 AI 内容检测与传播风险评估平台，守护数字内容的真实与可信。</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-white mb-4">产品</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="detect.html" class="hover:text-white transition">检测中心</a></li>
+                        <li><a href="api.html" class="hover:text-white transition">API 文档</a></li>
+                        <li><a href="pricing.html" class="hover:text-white transition">定价方案</a></li>
+                        <li><a href="dashboard.html" class="hover:text-white transition">控制台</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-white mb-4">支持平台</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li>小红书</li>
+                        <li>抖音 / 快手</li>
+                        <li>淘宝 / 京东 / 拼多多</li>
+                        <li>微信公众号 / 视频号</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-white mb-4">关于</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-white transition">关于我们</a></li>
+                        <li><a href="#" class="hover:text-white transition">使用条款</a></li>
+                        <li><a href="#" class="hover:text-white transition">隐私政策</a></li>
+                        <li><a href="#" class="hover:text-white transition">联系我们</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-slate-800 pt-6 flex flex-col md:flex-row justify-between items-center text-sm">
+                <span>&copy; 2026 TruthLens 真识. All rights reserved.</span>
+                <span class="mt-2 md:mt-0">Powered by Advanced AI Detection Models</span>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

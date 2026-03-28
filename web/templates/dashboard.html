@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>控制台 - TruthLens 真识</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', system-ui, sans-serif; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+        .sidebar-link:hover {
+            background-color: #f1f5f9;
+        }
+        .sidebar-link.active {
+            background-color: #eff6ff;
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        /* 统计卡片 */
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px -4px rgba(0,0,0,0.1);
+        }
+
+        /* 图表模拟 */
+        .bar {
+            transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 4px 4px 0 0;
+        }
+
+        /* 历史表格行 */
+        .table-row {
+            transition: background-color 0.15s ease;
+        }
+        .table-row:hover {
+            background-color: #f8fafc;
+        }
+
+        /* API Key 遮罩 */
+        .api-key-masked {
+            font-family: monospace;
+            letter-spacing: 2px;
+        }
+
+        /* 迷你图表 */
+        .sparkline {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 32px;
+        }
+        .sparkline-bar {
+            width: 4px;
+            border-radius: 2px;
+            background: #3b82f6;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-slate-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- 顶部导航 -->
+    <nav class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-30 flex-shrink-0">
+        <div class="flex items-center gap-4">
+            <a href="index.html" class="flex items-center gap-2.5">
+                <div class="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
+                    <i class="fa-solid fa-shield-halved text-white text-xs"></i>
+                </div>
+                <span class="font-bold text-lg text-slate-800">TruthLens</span>
+            </a>
+            <div class="hidden md:block h-6 w-px bg-slate-200 mx-2"></div>
+            <span class="hidden md:block text-sm font-medium text-slate-600">控制台</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="detect.html" class="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-magnifying-glass"></i> 前往检测
+            </a>
+            <button class="relative text-slate-400 hover:text-slate-700 transition">
+                <i class="fa-solid fa-bell text-lg"></i>
+                <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">3</span>
+            </button>
+            <div class="flex items-center gap-2 cursor-pointer">
+                <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">L</div>
+                <span class="hidden md:block text-sm font-medium text-slate-700">Lei Zhang</span>
+                <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- 左侧边栏 -->
+        <aside class="w-56 bg-white border-r border-slate-200 flex flex-col flex-shrink-0 hidden md:flex">
+            <div class="flex-1 p-3 space-y-1 overflow-y-auto">
+                <a href="#" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm">
+                    <i class="fa-solid fa-chart-line w-5 text-center text-blue-500"></i> 总览
+                </a>
+                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600">
+                    <i class="fa-solid fa-clock-rotate-left w-5 text-center text-slate-400"></i> 检测历史
+                </a>
+                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600">
+                    <i class="fa-solid fa-chart-bar w-5 text-center text-slate-400"></i> 数据统计
+                </a>
+                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600">
+                    <i class="fa-solid fa-key w-5 text-center text-slate-400"></i> API 密钥
+                </a>
+                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600">
+                    <i class="fa-solid fa-bell w-5 text-center text-slate-400"></i> 告警规则
+                </a>
+
+                <div class="pt-4 pb-2">
+                    <div class="text-xs text-slate-400 uppercase font-bold tracking-wider px-3 mb-2">设置</div>
+                </div>
+                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600">
+                    <i class="fa-solid fa-user w-5 text-center text-slate-400"></i> 账户信息
+                </a>
+                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600">
+                    <i class="fa-solid fa-users w-5 text-center text-slate-400"></i> 团队管理
+                </a>
+                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600">
+                    <i class="fa-solid fa-receipt w-5 text-center text-slate-400"></i> 账单
+                </a>
+            </div>
+
+            <!-- 套餐信息 -->
+            <div class="p-3 border-t border-slate-200">
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded">专业版</span>
+                    </div>
+                    <div class="text-xs text-slate-500 mb-3">2026.04.02 到期</div>
+                    <a href="pricing.html" class="text-xs text-blue-600 hover:underline font-medium">升级到 API 版 →</a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="flex-1 overflow-y-auto p-6">
+            <!-- 欢迎 + 日期 -->
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900">控制台总览</h1>
+                    <p class="text-sm text-slate-500">2026 年 3 月 2 日，周一</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <select class="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option>最近 7 天</option>
+                        <option>最近 30 天</option>
+                        <option>本月</option>
+                        <option>自定义</option>
+                    </select>
+                    <button class="bg-white border border-slate-200 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition">
+                        <i class="fa-solid fa-download mr-1"></i> 导出
+                    </button>
+                </div>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="stat-card bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-file-lines text-blue-600"></i>
+                        </div>
+                        <div class="sparkline">
+                            <div class="sparkline-bar" style="height:40%"></div>
+                            <div class="sparkline-bar" style="height:60%"></div>
+                            <div class="sparkline-bar" style="height:45%"></div>
+                            <div class="sparkline-bar" style="height:80%"></div>
+                            <div class="sparkline-bar" style="height:65%"></div>
+                            <div class="sparkline-bar" style="height:90%"></div>
+                            <div class="sparkline-bar" style="height:75%"></div>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-slate-900">2,847</div>
+                    <div class="flex items-center justify-between mt-1">
+                        <span class="text-xs text-slate-500">总检测次数</span>
+                        <span class="text-xs text-green-600 font-medium"><i class="fa-solid fa-arrow-up mr-0.5"></i>12.5%</span>
+                    </div>
+                </div>
+
+                <div class="stat-card bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-robot text-red-500"></i>
+                        </div>
+                        <div class="sparkline">
+                            <div class="sparkline-bar bg-red-400" style="height:50%"></div>
+                            <div class="sparkline-bar bg-red-400" style="height:70%"></div>
+                            <div class="sparkline-bar bg-red-400" style="height:55%"></div>
+                            <div class="sparkline-bar bg-red-400" style="height:85%"></div>
+                            <div class="sparkline-bar bg-red-400" style="height:60%"></div>
+                            <div class="sparkline-bar bg-red-400" style="height:75%"></div>
+                            <div class="sparkline-bar bg-red-400" style="height:80%"></div>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-slate-900">1,234</div>
+                    <div class="flex items-center justify-between mt-1">
+                        <span class="text-xs text-slate-500">AI 生成检出</span>
+                        <span class="text-xs text-red-600 font-medium">43.3% 检出率</span>
+                    </div>
+                </div>
+
+                <div class="stat-card bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-triangle-exclamation text-orange-500"></i>
+                        </div>
+                        <div class="sparkline">
+                            <div class="sparkline-bar bg-orange-400" style="height:30%"></div>
+                            <div class="sparkline-bar bg-orange-400" style="height:45%"></div>
+                            <div class="sparkline-bar bg-orange-400" style="height:60%"></div>
+                            <div class="sparkline-bar bg-orange-400" style="height:40%"></div>
+                            <div class="sparkline-bar bg-orange-400" style="height:70%"></div>
+                            <div class="sparkline-bar bg-orange-400" style="height:55%"></div>
+                            <div class="sparkline-bar bg-orange-400" style="height:65%"></div>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-slate-900">387</div>
+                    <div class="flex items-center justify-between mt-1">
+                        <span class="text-xs text-slate-500">高风险内容</span>
+                        <span class="text-xs text-orange-600 font-medium">L3+ 级别</span>
+                    </div>
+                </div>
+
+                <div class="stat-card bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-gauge-high text-green-500"></i>
+                        </div>
+                        <div class="sparkline">
+                            <div class="sparkline-bar bg-green-400" style="height:80%"></div>
+                            <div class="sparkline-bar bg-green-400" style="height:85%"></div>
+                            <div class="sparkline-bar bg-green-400" style="height:75%"></div>
+                            <div class="sparkline-bar bg-green-400" style="height:90%"></div>
+                            <div class="sparkline-bar bg-green-400" style="height:88%"></div>
+                            <div class="sparkline-bar bg-green-400" style="height:92%"></div>
+                            <div class="sparkline-bar bg-green-400" style="height:87%"></div>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-slate-900">1.6s</div>
+                    <div class="flex items-center justify-between mt-1">
+                        <span class="text-xs text-slate-500">平均检测耗时</span>
+                        <span class="text-xs text-green-600 font-medium"><i class="fa-solid fa-arrow-down mr-0.5"></i>8.2%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-12 gap-6 mb-8">
+                <!-- 检测趋势图 -->
+                <div class="lg:col-span-8 bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="font-bold text-slate-800">检测趋势</h3>
+                        <div class="flex items-center gap-4 text-xs">
+                            <span class="flex items-center gap-1"><span class="w-3 h-3 bg-blue-500 rounded-sm"></span> 总检测</span>
+                            <span class="flex items-center gap-1"><span class="w-3 h-3 bg-red-400 rounded-sm"></span> AI 检出</span>
+                            <span class="flex items-center gap-1"><span class="w-3 h-3 bg-orange-400 rounded-sm"></span> 高风险</span>
+                        </div>
+                    </div>
+                    <!-- 柱状图模拟 -->
+                    <div class="flex items-end justify-between gap-2 h-48 px-2">
+                        <div class="flex-1 flex items-end gap-1 justify-center">
+                            <div class="bar bg-blue-500 w-3" style="height:60%"></div>
+                            <div class="bar bg-red-400 w-3" style="height:25%"></div>
+                            <div class="bar bg-orange-400 w-3" style="height:10%"></div>
+                        </div>
+                        <div class="flex-1 flex items-end gap-1 justify-center">
+                            <div class="bar bg-blue-500 w-3" style="height:75%"></div>
+                            <div class="bar bg-red-400 w-3" style="height:35%"></div>
+                            <div class="bar bg-orange-400 w-3" style="height:15%"></div>
+                        </div>
+                        <div class="flex-1 flex items-end gap-1 justify-center">
+                            <div class="bar bg-blue-500 w-3" style="height:55%"></div>
+                            <div class="bar bg-red-400 w-3" style="height:20%"></div>
+                            <div class="bar bg-orange-400 w-3" style="height:8%"></div>
+                        </div>
+                        <div class="flex-1 flex items-end gap-1 justify-center">
+                            <div class="bar bg-blue-500 w-3" style="height:90%"></div>
+                            <div class="bar bg-red-400 w-3" style="height:40%"></div>
+                            <div class="bar bg-orange-400 w-3" style="height:20%"></div>
+                        </div>
+                        <div class="flex-1 flex items-end gap-1 justify-center">
+                            <div class="bar bg-blue-500 w-3" style="height:80%"></div>
+                            <div class="bar bg-red-400 w-3" style="height:38%"></div>
+                            <div class="bar bg-orange-400 w-3" style="height:18%"></div>
+                        </div>
+                        <div class="flex-1 flex items-end gap-1 justify-center">
+                            <div class="bar bg-blue-500 w-3" style="height:95%"></div>
+                            <div class="bar bg-red-400 w-3" style="height:45%"></div>
+                            <div class="bar bg-orange-400 w-3" style="height:22%"></div>
+                        </div>
+                        <div class="flex-1 flex items-end gap-1 justify-center">
+                            <div class="bar bg-blue-500 w-3" style="height:85%"></div>
+                            <div class="bar bg-red-400 w-3" style="height:42%"></div>
+                            <div class="bar bg-orange-400 w-3" style="height:20%"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-xs text-slate-400 mt-2 px-2">
+                        <span>2/24</span><span>2/25</span><span>2/26</span><span>2/27</span><span>2/28</span><span>3/1</span><span>3/2</span>
+                    </div>
+                </div>
+
+                <!-- 平台分布 -->
+                <div class="lg:col-span-4 bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                    <h3 class="font-bold text-slate-800 mb-4">平台分布</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-600 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-book-open text-red-400 text-xs"></i> 小红书
+                                </span>
+                                <span class="font-medium text-slate-800">38%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2">
+                                <div class="bg-red-400 h-2 rounded-full" style="width: 38%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-600 flex items-center gap-1.5">
+                                    <i class="fa-brands fa-tiktok text-xs"></i> 抖音
+                                </span>
+                                <span class="font-medium text-slate-800">25%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2">
+                                <div class="bg-slate-700 h-2 rounded-full" style="width: 25%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-600 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-cart-shopping text-orange-400 text-xs"></i> 电商
+                                </span>
+                                <span class="font-medium text-slate-800">20%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2">
+                                <div class="bg-orange-400 h-2 rounded-full" style="width: 20%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-600 flex items-center gap-1.5">
+                                    <i class="fa-brands fa-weixin text-green-500 text-xs"></i> 微信
+                                </span>
+                                <span class="font-medium text-slate-800">12%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2">
+                                <div class="bg-green-500 h-2 rounded-full" style="width: 12%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-600 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-globe text-blue-400 text-xs"></i> 其他
+                                </span>
+                                <span class="font-medium text-slate-800">5%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2">
+                                <div class="bg-blue-400 h-2 rounded-full" style="width: 5%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 风险等级分布 -->
+                    <div class="mt-6 pt-5 border-t border-slate-100">
+                        <h4 class="text-sm font-bold text-slate-700 mb-3">风险分布</h4>
+                        <div class="flex gap-2">
+                            <div class="flex-1 text-center p-2 bg-green-50 rounded-lg">
+                                <div class="text-lg font-bold text-green-600">45%</div>
+                                <div class="text-xs text-green-600">L1</div>
+                            </div>
+                            <div class="flex-1 text-center p-2 bg-yellow-50 rounded-lg">
+                                <div class="text-lg font-bold text-yellow-600">23%</div>
+                                <div class="text-xs text-yellow-600">L2</div>
+                            </div>
+                            <div class="flex-1 text-center p-2 bg-orange-50 rounded-lg">
+                                <div class="text-lg font-bold text-orange-600">20%</div>
+                                <div class="text-xs text-orange-600">L3</div>
+                            </div>
+                            <div class="flex-1 text-center p-2 bg-red-50 rounded-lg">
+                                <div class="text-lg font-bold text-red-600">12%</div>
+                                <div class="text-xs text-red-600">L4</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Key 管理 -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-key text-yellow-500"></i> API 密钥
+                    </h3>
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg font-medium transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus"></i> 创建密钥
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="border-b border-slate-200">
+                            <tr>
+                                <th class="text-left py-3 px-3 font-semibold text-slate-600">名称</th>
+                                <th class="text-left py-3 px-3 font-semibold text-slate-600">密钥</th>
+                                <th class="text-left py-3 px-3 font-semibold text-slate-600">创建时间</th>
+                                <th class="text-left py-3 px-3 font-semibold text-slate-600">最后使用</th>
+                                <th class="text-left py-3 px-3 font-semibold text-slate-600">状态</th>
+                                <th class="text-left py-3 px-3 font-semibold text-slate-600">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="table-row">
+                                <td class="py-3 px-3 font-medium text-slate-800">生产环境</td>
+                                <td class="py-3 px-3">
+                                    <div class="flex items-center gap-2">
+                                        <code class="api-key-masked text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">tl-sk-****************************a3f8</code>
+                                        <button class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-eye text-xs"></i></button>
+                                        <button class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-copy text-xs"></i></button>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-3 text-slate-500">2026-02-15</td>
+                                <td class="py-3 px-3 text-slate-500">2分钟前</td>
+                                <td class="py-3 px-3"><span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-full">活跃</span></td>
+                                <td class="py-3 px-3">
+                                    <button class="text-red-500 hover:text-red-700 text-xs font-medium transition">撤销</button>
+                                </td>
+                            </tr>
+                            <tr class="table-row">
+                                <td class="py-3 px-3 font-medium text-slate-800">测试环境</td>
+                                <td class="py-3 px-3">
+                                    <div class="flex items-center gap-2">
+                                        <code class="api-key-masked text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">tl-sk-****************************b7e2</code>
+                                        <button class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-eye text-xs"></i></button>
+                                        <button class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-copy text-xs"></i></button>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-3 text-slate-500">2026-02-20</td>
+                                <td class="py-3 px-3 text-slate-500">3小时前</td>
+                                <td class="py-3 px-3"><span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-full">活跃</span></td>
+                                <td class="py-3 px-3">
+                                    <button class="text-red-500 hover:text-red-700 text-xs font-medium transition">撤销</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 最近检测历史 -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-slate-400"></i> 最近检测记录
+                    </h3>
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <input type="text" class="pl-8 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none w-48" placeholder="搜索检测记录...">
+                        </div>
+                        <select class="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option>全部类型</option>
+                            <option>文本</option>
+                            <option>图片</option>
+                            <option>链接</option>
+                        </select>
+                        <select class="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option>全部风险</option>
+                            <option>L1 低风险</option>
+                            <option>L2 中风险</option>
+                            <option>L3 高风险</option>
+                            <option>L4 极高风险</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="border-b border-slate-200">
+                            <tr>
+                                <th class="text-left py-3 px-3 font-semibold text-slate-600">内容摘要</th>
+                                <th class="text-left py-3 px-3 font-semibold text-slate-600">类型</th>
+                                <th class="text-left py-3 px-3 font-semibold text-slate-600">平台</th>
+                                <th class="text-left py-3 px-3 font-semibold text-slate-600">AI 概率</th>
+                                <th class="text-left py-3 px-3 font-semibold text-slate-600">风险</th>
+                                <th class="text-left py-3 px-3 font-semibold text-slate-600">时间</th>
+                                <th class="text-left py-3 px-3 font-semibold text-slate-600">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="table-row">
+                                <td class="py-3 px-3">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-file-lines text-blue-400 text-xs"></i>
+                                        <span class="text-slate-800 font-medium truncate max-w-xs">这款面霜真的太好用了！作为一个干皮星人...</span>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-3"><span class="bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded">文本</span></td>
+                                <td class="py-3 px-3 text-slate-600"><i class="fa-solid fa-book-open text-red-400 text-xs mr-1"></i>小红书</td>
+                                <td class="py-3 px-3"><span class="text-red-600 font-bold">92.7%</span></td>
+                                <td class="py-3 px-3"><span class="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-0.5 rounded">L3</span></td>
+                                <td class="py-3 px-3 text-slate-500">14:32</td>
+                                <td class="py-3 px-3"><a href="result.html" class="text-blue-600 hover:underline text-xs font-medium">查看</a></td>
+                            </tr>
+                            <tr class="table-row">
+                                <td class="py-3 px-3">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-link text-green-400 text-xs"></i>
+                                        <span class="text-slate-800 font-medium truncate max-w-xs">https://www.xiaohongshu.com/explore/def456</span>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-3"><span class="bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded">链接</span></td>
+                                <td class="py-3 px-3 text-slate-600"><i class="fa-solid fa-book-open text-red-400 text-xs mr-1"></i>小红书</td>
+                                <td class="py-3 px-3"><span class="text-green-600 font-bold">12.3%</span></td>
+                                <td class="py-3 px-3"><span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded">L1</span></td>
+                                <td class="py-3 px-3 text-slate-500">14:15</td>
+                                <td class="py-3 px-3"><a href="result.html" class="text-blue-600 hover:underline text-xs font-medium">查看</a></td>
+                            </tr>
+                            <tr class="table-row">
+                                <td class="py-3 px-3">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-image text-purple-400 text-xs"></i>
+                                        <span class="text-slate-800 font-medium truncate max-w-xs">产品展示图 - AI 风格化处理检测</span>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-3"><span class="bg-purple-50 text-purple-700 text-xs px-2 py-0.5 rounded">图片</span></td>
+                                <td class="py-3 px-3 text-slate-600"><i class="fa-solid fa-cart-shopping text-orange-400 text-xs mr-1"></i>淘宝</td>
+                                <td class="py-3 px-3"><span class="text-orange-600 font-bold">67.8%</span></td>
+                                <td class="py-3 px-3"><span class="bg-yellow-100 text-yellow-700 text-xs font-bold px-2 py-0.5 rounded">L2</span></td>
+                                <td class="py-3 px-3 text-slate-500">13:42</td>
+                                <td class="py-3 px-3"><a href="result.html" class="text-blue-600 hover:underline text-xs font-medium">查看</a></td>
+                            </tr>
+                            <tr class="table-row">
+                                <td class="py-3 px-3">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-file-lines text-blue-400 text-xs"></i>
+                                        <span class="text-slate-800 font-medium truncate max-w-xs">这款耳机的音质真的让我惊艳到了...</span>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-3"><span class="bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded">文本</span></td>
+                                <td class="py-3 px-3 text-slate-600"><i class="fa-brands fa-tiktok text-xs mr-1"></i>抖音</td>
+                                <td class="py-3 px-3"><span class="text-red-600 font-bold">88.4%</span></td>
+                                <td class="py-3 px-3"><span class="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-0.5 rounded">L3</span></td>
+                                <td class="py-3 px-3 text-slate-500">12:18</td>
+                                <td class="py-3 px-3"><a href="result.html" class="text-blue-600 hover:underline text-xs font-medium">查看</a></td>
+                            </tr>
+                            <tr class="table-row">
+                                <td class="py-3 px-3">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-link text-green-400 text-xs"></i>
+                                        <span class="text-slate-800 font-medium truncate max-w-xs">https://mp.weixin.qq.com/s/xyz789abc</span>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-3"><span class="bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded">链接</span></td>
+                                <td class="py-3 px-3 text-slate-600"><i class="fa-brands fa-weixin text-green-500 text-xs mr-1"></i>微信</td>
+                                <td class="py-3 px-3"><span class="text-red-600 font-bold">95.1%</span></td>
+                                <td class="py-3 px-3"><span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded">L4</span></td>
+                                <td class="py-3 px-3 text-slate-500">11:05</td>
+                                <td class="py-3 px-3"><a href="result.html" class="text-blue-600 hover:underline text-xs font-medium">查看</a></td>
+                            </tr>
+                            <tr class="table-row">
+                                <td class="py-3 px-3">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-camera text-orange-400 text-xs"></i>
+                                        <span class="text-slate-800 font-medium truncate max-w-xs">聊天记录截图检测 - 虚假客服信息</span>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-3"><span class="bg-orange-50 text-orange-700 text-xs px-2 py-0.5 rounded">截图</span></td>
+                                <td class="py-3 px-3 text-slate-600"><i class="fa-solid fa-globe text-blue-400 text-xs mr-1"></i>其他</td>
+                                <td class="py-3 px-3"><span class="text-red-600 font-bold">91.2%</span></td>
+                                <td class="py-3 px-3"><span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded">L4</span></td>
+                                <td class="py-3 px-3 text-slate-500">10:33</td>
+                                <td class="py-3 px-3"><a href="result.html" class="text-blue-600 hover:underline text-xs font-medium">查看</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页 -->
+                <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+                    <span class="text-xs text-slate-400">显示 1-6 条，共 2,847 条记录</span>
+                    <div class="flex items-center gap-1">
+                        <button class="px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:bg-slate-100 transition">
+                            <i class="fa-solid fa-chevron-left text-xs"></i>
+                        </button>
+                        <button class="px-3 py-1.5 rounded-lg text-sm bg-blue-600 text-white font-medium">1</button>
+                        <button class="px-3 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-100 transition">2</button>
+                        <button class="px-3 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-100 transition">3</button>
+                        <span class="px-2 text-slate-400">...</span>
+                        <button class="px-3 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-100 transition">475</button>
+                        <button class="px-3 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-100 transition">
+                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

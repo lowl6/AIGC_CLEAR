@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>检测中心 - TruthLens 真识</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', system-ui, sans-serif; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+        /* Tab 下划线动画 */
+        .tab-active {
+            color: #2563eb;
+            border-bottom: 2px solid #2563eb;
+        }
+        .tab-item {
+            transition: all 0.2s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-item:hover {
+            color: #3b82f6;
+        }
+
+        /* 拖拽区域 */
+        .drop-zone {
+            border: 2px dashed #cbd5e1;
+            transition: all 0.3s ease;
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        /* 检测动画 */
+        .detecting-pulse {
+            animation: detectPulse 1.5s ease-in-out infinite;
+        }
+        @keyframes detectPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* 平台选择器 */
+        .platform-chip {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .platform-chip:hover {
+            transform: scale(1.03);
+        }
+        .platform-chip.selected {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+            color: #2563eb;
+        }
+
+        /* 文件卡片 */
+        .file-card {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* 历史记录项 */
+        .history-item {
+            transition: all 0.2s ease;
+        }
+        .history-item:hover {
+            background-color: #f8fafc;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="bg-gray-50 text-slate-800 min-h-screen">
+
+    <!-- 顶部导航 -->
+    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-slate-200/60">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="index.html" class="flex items-center gap-2.5">
+                <div class="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
+                    <i class="fa-solid fa-shield-halved text-white text-sm"></i>
+                </div>
+                <span class="font-bold text-xl text-slate-800">TruthLens</span>
+                <span class="text-xs text-slate-400 font-medium hidden sm:inline">真识</span>
+            </a>
+            <div class="hidden md:flex items-center gap-8">
+                <a href="detect.html" class="text-sm font-semibold text-blue-600">检测中心</a>
+                <a href="api.html" class="text-sm font-medium text-slate-600 hover:text-blue-600 transition">API 接入</a>
+                <a href="pricing.html" class="text-sm font-medium text-slate-600 hover:text-blue-600 transition">定价方案</a>
+                <a href="dashboard.html" class="text-sm font-medium text-slate-600 hover:text-blue-600 transition">控制台</a>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="hidden md:flex items-center gap-2 text-sm text-slate-500">
+                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                    剩余 87 次
+                </span>
+                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fa-solid fa-user text-blue-600 text-xs"></i>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <div class="grid lg:grid-cols-12 gap-8">
+
+            <!-- 左侧主区域 -->
+            <div class="lg:col-span-8">
+                <!-- 标题 -->
+                <div class="mb-6">
+                    <h1 class="text-2xl font-bold text-slate-900 mb-1">内容检测</h1>
+                    <p class="text-sm text-slate-500">选择输入方式，提交需要检测的内容</p>
+                </div>
+
+                <!-- 平台选择 -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">
+                        <i class="fa-solid fa-globe mr-1 text-slate-400"></i> 来源平台（可选，提升检测精度）
+                    </label>
+                    <div class="flex flex-wrap gap-2">
+                        <div class="platform-chip selected text-sm px-4 py-2 rounded-full border border-blue-300 bg-blue-50 text-blue-600 font-medium" onclick="selectPlatform(this)">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> 自动识别
+                        </div>
+                        <div class="platform-chip text-sm px-4 py-2 rounded-full border border-slate-200 bg-white text-slate-600 font-medium" onclick="selectPlatform(this)">
+                            <i class="fa-solid fa-book-open mr-1 text-red-400"></i> 小红书
+                        </div>
+                        <div class="platform-chip text-sm px-4 py-2 rounded-full border border-slate-200 bg-white text-slate-600 font-medium" onclick="selectPlatform(this)">
+                            <i class="fa-brands fa-tiktok mr-1"></i> 抖音
+                        </div>
+                        <div class="platform-chip text-sm px-4 py-2 rounded-full border border-slate-200 bg-white text-slate-600 font-medium" onclick="selectPlatform(this)">
+                            <i class="fa-solid fa-video mr-1 text-orange-400"></i> 快手
+                        </div>
+                        <div class="platform-chip text-sm px-4 py-2 rounded-full border border-slate-200 bg-white text-slate-600 font-medium" onclick="selectPlatform(this)">
+                            <i class="fa-solid fa-shopping-bag mr-1 text-orange-500"></i> 淘宝
+                        </div>
+                        <div class="platform-chip text-sm px-4 py-2 rounded-full border border-slate-200 bg-white text-slate-600 font-medium" onclick="selectPlatform(this)">
+                            <i class="fa-solid fa-store mr-1 text-red-500"></i> 京东
+                        </div>
+                        <div class="platform-chip text-sm px-4 py-2 rounded-full border border-slate-200 bg-white text-slate-600 font-medium" onclick="selectPlatform(this)">
+                            <i class="fa-brands fa-weixin mr-1 text-green-500"></i> 微信
+                        </div>
+                        <div class="platform-chip text-sm px-4 py-2 rounded-full border border-slate-200 bg-white text-slate-600 font-medium" onclick="selectPlatform(this)">
+                            <i class="fa-solid fa-ellipsis mr-1"></i> 其他
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 输入方式 Tab -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="flex border-b border-slate-200 overflow-x-auto">
+                        <button class="tab-item tab-active px-6 py-4 text-sm font-medium whitespace-nowrap flex items-center gap-2" onclick="switchTab('text', this)">
+                            <i class="fa-solid fa-keyboard"></i> 文本输入
+                        </button>
+                        <button class="tab-item px-6 py-4 text-sm font-medium whitespace-nowrap text-slate-500 flex items-center gap-2" onclick="switchTab('link', this)">
+                            <i class="fa-solid fa-link"></i> 粘贴链接
+                        </button>
+                        <button class="tab-item px-6 py-4 text-sm font-medium whitespace-nowrap text-slate-500 flex items-center gap-2" onclick="switchTab('image', this)">
+                            <i class="fa-solid fa-image"></i> 上传图片
+                        </button>
+                        <button class="tab-item px-6 py-4 text-sm font-medium whitespace-nowrap text-slate-500 flex items-center gap-2" onclick="switchTab('screenshot', this)">
+                            <i class="fa-solid fa-camera"></i> 上传截图
+                        </button>
+                        <button class="tab-item px-6 py-4 text-sm font-medium whitespace-nowrap text-slate-500 flex items-center gap-2" onclick="switchTab('batch', this)">
+                            <i class="fa-solid fa-layer-group"></i> 批量上传
+                        </button>
+                    </div>
+
+                    <!-- 文本输入 -->
+                    <div id="tab-text" class="tab-content active p-6">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-slate-700 mb-2">输入待检测文本</label>
+                            <textarea class="w-full h-48 px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-none text-sm leading-relaxed" placeholder="粘贴需要检测的文本内容...&#10;&#10;支持检测小红书笔记、商品描述、评论评测、新闻稿件等各类文本。&#10;建议输入不少于 50 字以获得更准确的检测结果。"></textarea>
+                            <div class="flex justify-between mt-2 text-xs text-slate-400">
+                                <span>建议 50 字以上</span>
+                                <span>0 / 10,000 字</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                                    <input type="checkbox" checked class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                                    <span>深度分析模式</span>
+                                </label>
+                                <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                                    <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                                    <span>风险评估</span>
+                                </label>
+                            </div>
+                            <a href="result.html" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded-lg font-medium shadow-md shadow-blue-600/20 transition flex items-center gap-2">
+                                <i class="fa-solid fa-magnifying-glass"></i> 开始检测
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 粘贴链接 -->
+                    <div id="tab-link" class="tab-content p-6">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-slate-700 mb-2">输入内容链接</label>
+                            <div class="flex gap-3">
+                                <div class="flex-1 relative">
+                                    <i class="fa-solid fa-link absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                    <input type="url" class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm" placeholder="粘贴小红书、抖音、淘宝等平台链接...">
+                                </div>
+                                <a href="result.html" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium shadow-md shadow-blue-600/20 transition flex items-center gap-2 whitespace-nowrap">
+                                    <i class="fa-solid fa-magnifying-glass"></i> 检测
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 rounded-xl p-4 mb-4">
+                            <div class="text-sm font-medium text-slate-700 mb-3">支持的链接格式</div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-slate-500">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-check text-green-500 text-xs"></i>
+                                    <span>小红书笔记链接 (xhslink.com / xiaohongshu.com)</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-check text-green-500 text-xs"></i>
+                                    <span>抖音视频链接 (v.douyin.com)</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-check text-green-500 text-xs"></i>
+                                    <span>淘宝商品链接 (taobao.com / tmall.com)</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-check text-green-500 text-xs"></i>
+                                    <span>微信公众号文章 (mp.weixin.qq.com)</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-check text-green-500 text-xs"></i>
+                                    <span>京东商品链接 (jd.com)</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-check text-green-500 text-xs"></i>
+                                    <span>快手视频链接 (kuaishou.com)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-xs text-slate-400 flex items-center gap-1">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span>系统将自动抓取链接内的文字与图片内容进行综合检测</span>
+                        </div>
+                    </div>
+
+                    <!-- 上传图片 -->
+                    <div id="tab-image" class="tab-content p-6">
+                        <div class="drop-zone rounded-xl p-10 text-center cursor-pointer mb-4" onclick="document.getElementById('image-upload').click()">
+                            <input type="file" id="image-upload" class="hidden" accept="image/*" multiple>
+                            <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <i class="fa-solid fa-cloud-arrow-up text-blue-500 text-2xl"></i>
+                            </div>
+                            <p class="text-sm font-medium text-slate-700 mb-1">拖拽图片到此处，或点击上传</p>
+                            <p class="text-xs text-slate-400">支持 JPG、PNG、WebP，单张最大 20MB，最多 10 张</p>
+                        </div>
+
+                        <!-- 已上传文件预览 -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                            <div class="file-card relative group bg-slate-100 rounded-xl aspect-square flex items-center justify-center">
+                                <div class="text-center">
+                                    <i class="fa-solid fa-image text-slate-300 text-3xl mb-2"></i>
+                                    <p class="text-xs text-slate-400">示例图片1.jpg</p>
+                                </div>
+                                <button class="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full items-center justify-center text-xs hidden group-hover:flex">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                                <input type="checkbox" checked class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                                <span>同时检测图片上的文字 (OCR)</span>
+                            </label>
+                            <a href="result.html" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded-lg font-medium shadow-md shadow-blue-600/20 transition flex items-center gap-2">
+                                <i class="fa-solid fa-magnifying-glass"></i> 开始检测
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 上传截图 -->
+                    <div id="tab-screenshot" class="tab-content p-6">
+                        <div class="drop-zone rounded-xl p-10 text-center cursor-pointer mb-4">
+                            <div class="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <i class="fa-solid fa-mobile-screen text-orange-500 text-2xl"></i>
+                            </div>
+                            <p class="text-sm font-medium text-slate-700 mb-1">上传平台内容截图</p>
+                            <p class="text-xs text-slate-400 mb-4">系统将自动识别平台类型并提取图文内容进行检测</p>
+                            <div class="flex justify-center gap-3">
+                                <button class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+                                    <i class="fa-solid fa-upload mr-1"></i> 选择截图
+                                </button>
+                                <button class="bg-white border border-slate-300 text-slate-700 px-5 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 transition">
+                                    <i class="fa-solid fa-paste mr-1"></i> 从剪贴板粘贴
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bg-amber-50 rounded-xl p-4 flex items-start gap-3 mb-4">
+                            <i class="fa-solid fa-lightbulb text-amber-500 mt-0.5"></i>
+                            <div class="text-sm text-amber-800">
+                                <strong>提示：</strong>截图检测支持自动识别小红书、抖音、淘宝等平台界面，OCR 提取文字后进行 AI 内容分析。建议截图完整包含帖子标题、正文和图片。
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <a href="result.html" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded-lg font-medium shadow-md shadow-blue-600/20 transition flex items-center gap-2">
+                                <i class="fa-solid fa-magnifying-glass"></i> 开始检测
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 批量上传 -->
+                    <div id="tab-batch" class="tab-content p-6">
+                        <div class="grid md:grid-cols-2 gap-4 mb-6">
+                            <!-- 批量链接 -->
+                            <div class="border border-slate-200 rounded-xl p-5">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <div class="w-9 h-9 bg-indigo-50 rounded-lg flex items-center justify-center">
+                                        <i class="fa-solid fa-list text-indigo-600"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-bold text-slate-800">批量链接</div>
+                                        <div class="text-xs text-slate-400">每行一个链接</div>
+                                    </div>
+                                </div>
+                                <textarea class="w-full h-32 px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm resize-none" placeholder="https://www.xiaohongshu.com/...&#10;https://v.douyin.com/...&#10;https://item.taobao.com/..."></textarea>
+                            </div>
+
+                            <!-- 文件上传 -->
+                            <div class="border border-slate-200 rounded-xl p-5">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <div class="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center">
+                                        <i class="fa-solid fa-file-csv text-emerald-600"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-bold text-slate-800">文件上传</div>
+                                        <div class="text-xs text-slate-400">CSV / Excel 格式</div>
+                                    </div>
+                                </div>
+                                <div class="drop-zone rounded-lg p-6 text-center cursor-pointer">
+                                    <i class="fa-solid fa-file-arrow-up text-slate-300 text-xl mb-2"></i>
+                                    <p class="text-xs text-slate-500">拖拽或点击上传 CSV/XLSX 文件</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 模板下载 -->
+                        <div class="bg-slate-50 rounded-xl p-4 flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-download text-blue-500"></i>
+                                <div>
+                                    <div class="text-sm font-medium text-slate-700">下载批量上传模板</div>
+                                    <div class="text-xs text-slate-400">包含链接列、文本列、平台列等字段说明</div>
+                                </div>
+                            </div>
+                            <button class="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+                                <i class="fa-solid fa-download"></i> CSV模板
+                            </button>
+                        </div>
+
+                        <!-- 批量检测进度预览 -->
+                        <div class="border border-slate-200 rounded-xl p-5 mb-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="text-sm font-bold text-slate-800">待检测列表</div>
+                                <span class="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-medium">3 条内容</span>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between py-2 px-3 bg-slate-50 rounded-lg">
+                                    <div class="flex items-center gap-2 text-sm text-slate-600">
+                                        <i class="fa-solid fa-link text-xs text-slate-400"></i>
+                                        <span class="truncate max-w-xs">https://www.xiaohongshu.com/explore/abc123</span>
+                                    </div>
+                                    <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">待检测</span>
+                                </div>
+                                <div class="flex items-center justify-between py-2 px-3 bg-slate-50 rounded-lg">
+                                    <div class="flex items-center gap-2 text-sm text-slate-600">
+                                        <i class="fa-solid fa-link text-xs text-slate-400"></i>
+                                        <span class="truncate max-w-xs">https://v.douyin.com/xyz789</span>
+                                    </div>
+                                    <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">待检测</span>
+                                </div>
+                                <div class="flex items-center justify-between py-2 px-3 bg-slate-50 rounded-lg">
+                                    <div class="flex items-center gap-2 text-sm text-slate-600">
+                                        <i class="fa-solid fa-link text-xs text-slate-400"></i>
+                                        <span class="truncate max-w-xs">https://item.taobao.com/item.htm?id=456</span>
+                                    </div>
+                                    <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">待检测</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div class="text-xs text-slate-400">
+                                <i class="fa-solid fa-circle-info mr-1"></i>
+                                批量检测最多支持 500 条，预计耗时取决于内容数量
+                            </div>
+                            <a href="result.html" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded-lg font-medium shadow-md shadow-blue-600/20 transition flex items-center gap-2">
+                                <i class="fa-solid fa-rocket"></i> 批量检测
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 检测配置 -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mt-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-gear text-slate-400"></i> 检测配置
+                        </h3>
+                        <button class="text-xs text-blue-600 hover:underline font-medium">恢复默认</button>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">检测模型</label>
+                            <select class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
+                                <option>TruthLens v2.0（推荐）</option>
+                                <option>TruthLens v1.5（快速）</option>
+                                <option>深度模型（高精度，较慢）</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">检测语言</label>
+                            <select class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
+                                <option>自动识别</option>
+                                <option>中文</option>
+                                <option>英文</option>
+                                <option>中英混合</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">输出详细度</label>
+                            <select class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
+                                <option>标准报告</option>
+                                <option>详细报告（含段落级分析）</option>
+                                <option>简洁结果（仅判定+风险级）</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">风险评估维度</label>
+                            <div class="flex flex-wrap gap-2">
+                                <label class="flex items-center gap-1.5 text-sm text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg cursor-pointer border border-slate-200">
+                                    <input type="checkbox" checked class="w-3.5 h-3.5 rounded border-slate-300 text-blue-600">
+                                    <span>传播风险</span>
+                                </label>
+                                <label class="flex items-center gap-1.5 text-sm text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg cursor-pointer border border-slate-200">
+                                    <input type="checkbox" checked class="w-3.5 h-3.5 rounded border-slate-300 text-blue-600">
+                                    <span>虚假宣传</span>
+                                </label>
+                                <label class="flex items-center gap-1.5 text-sm text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg cursor-pointer border border-slate-200">
+                                    <input type="checkbox" class="w-3.5 h-3.5 rounded border-slate-300 text-blue-600">
+                                    <span>平台合规</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧面板 -->
+            <div class="lg:col-span-4 space-y-6">
+                <!-- 快速入口 -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                    <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-bolt text-yellow-500"></i> 快速操作
+                    </h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="switchTab('link', document.querySelectorAll('.tab-item')[1])" class="p-3 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition text-center group">
+                            <i class="fa-solid fa-paste text-slate-400 group-hover:text-blue-500 text-lg mb-1"></i>
+                            <p class="text-xs font-medium text-slate-600 group-hover:text-blue-600">粘贴链接</p>
+                        </button>
+                        <button onclick="switchTab('screenshot', document.querySelectorAll('.tab-item')[3])" class="p-3 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition text-center group">
+                            <i class="fa-solid fa-camera text-slate-400 group-hover:text-blue-500 text-lg mb-1"></i>
+                            <p class="text-xs font-medium text-slate-600 group-hover:text-blue-600">截图检测</p>
+                        </button>
+                        <button onclick="switchTab('batch', document.querySelectorAll('.tab-item')[4])" class="p-3 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition text-center group">
+                            <i class="fa-solid fa-layer-group text-slate-400 group-hover:text-blue-500 text-lg mb-1"></i>
+                            <p class="text-xs font-medium text-slate-600 group-hover:text-blue-600">批量上传</p>
+                        </button>
+                        <a href="api.html" class="p-3 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition text-center group">
+                            <i class="fa-solid fa-code text-slate-400 group-hover:text-blue-500 text-lg mb-1"></i>
+                            <p class="text-xs font-medium text-slate-600 group-hover:text-blue-600">API 接入</p>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 使用额度 -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                    <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-chart-pie text-blue-500"></i> 今日使用额度
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-600">文本检测</span>
+                                <span class="font-medium text-slate-800">13 / 100</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2">
+                                <div class="bg-blue-500 h-2 rounded-full" style="width: 13%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-600">图片检测</span>
+                                <span class="font-medium text-slate-800">5 / 50</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2">
+                                <div class="bg-purple-500 h-2 rounded-full" style="width: 10%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-600">链接检测</span>
+                                <span class="font-medium text-slate-800">8 / 50</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2">
+                                <div class="bg-green-500 h-2 rounded-full" style="width: 16%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="pricing.html" class="mt-4 text-xs text-blue-600 hover:underline font-medium flex items-center gap-1">
+                        <i class="fa-solid fa-arrow-up"></i> 升级获取更多额度
+                    </a>
+                </div>
+
+                <!-- 最近检测 -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-slate-800 flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-clock-rotate-left text-slate-400"></i> 最近检测
+                        </h3>
+                        <a href="dashboard.html" class="text-xs text-blue-600 hover:underline font-medium">查看全部</a>
+                    </div>
+                    <div class="space-y-2">
+                        <a href="result.html" class="history-item flex items-center gap-3 p-3 rounded-xl border border-transparent cursor-pointer">
+                            <div class="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fa-solid fa-circle-exclamation text-red-500 text-xs"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm text-slate-700 font-medium truncate">小红书种草笔记 - 面霜推荐</p>
+                                <p class="text-xs text-slate-400">AI概率 92% · 高风险 · 2分钟前</p>
+                            </div>
+                        </a>
+                        <a href="result.html" class="history-item flex items-center gap-3 p-3 rounded-xl border border-transparent cursor-pointer">
+                            <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fa-solid fa-circle-check text-green-500 text-xs"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm text-slate-700 font-medium truncate">淘宝商品评价 - 蓝牙耳机</p>
+                                <p class="text-xs text-slate-400">AI概率 12% · 低风险 · 15分钟前</p>
+                            </div>
+                        </a>
+                        <a href="result.html" class="history-item flex items-center gap-3 p-3 rounded-xl border border-transparent cursor-pointer">
+                            <div class="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fa-solid fa-triangle-exclamation text-orange-500 text-xs"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm text-slate-700 font-medium truncate">抖音文案 - 健身教程分享</p>
+                                <p class="text-xs text-slate-400">AI概率 67% · 中风险 · 1小时前</p>
+                            </div>
+                        </a>
+                        <a href="result.html" class="history-item flex items-center gap-3 p-3 rounded-xl border border-transparent cursor-pointer">
+                            <div class="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fa-solid fa-circle-exclamation text-red-500 text-xs"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm text-slate-700 font-medium truncate">微信公众号文章 - 行业分析</p>
+                                <p class="text-xs text-slate-400">AI概率 88% · 高风险 · 3小时前</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function switchTab(tabId, btn) {
+            // 隐藏所有 tab
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-item').forEach(t => {
+                t.classList.remove('tab-active');
+                t.classList.add('text-slate-500');
+            });
+            // 显示目标 tab
+            document.getElementById('tab-' + tabId).classList.add('active');
+            if (btn) {
+                btn.classList.add('tab-active');
+                btn.classList.remove('text-slate-500');
+            }
+        }
+
+        function selectPlatform(el) {
+            document.querySelectorAll('.platform-chip').forEach(c => {
+                c.classList.remove('selected');
+                c.classList.remove('border-blue-300', 'bg-blue-50', 'text-blue-600');
+                c.classList.add('border-slate-200', 'bg-white', 'text-slate-600');
+            });
+            el.classList.add('selected');
+            el.classList.remove('border-slate-200', 'bg-white', 'text-slate-600');
+            el.classList.add('border-blue-300', 'bg-blue-50', 'text-blue-600');
+        }
+    </script>
+</body>
+</html>

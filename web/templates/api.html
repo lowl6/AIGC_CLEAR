@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 接入 - TruthLens 真识</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        code, pre { font-family: 'JetBrains Mono', monospace; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+
+        /* 代码块语法高亮风格 */
+        .code-block {
+            background: #0f172a;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .code-header {
+            background: #1e293b;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+        }
+        .code-body {
+            padding: 16px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+        .code-body .comment { color: #64748b; }
+        .code-body .string { color: #86efac; }
+        .code-body .keyword { color: #93c5fd; }
+        .code-body .function { color: #c4b5fd; }
+        .code-body .number { color: #fbbf24; }
+        .code-body .key { color: #7dd3fc; }
+
+        /* 侧边导航 */
+        .sidebar-link {
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        .sidebar-link:hover {
+            background-color: #f1f5f9;
+            border-left-color: #cbd5e1;
+        }
+        .sidebar-link.active {
+            background-color: #eff6ff;
+            border-left-color: #3b82f6;
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        /* HTTP方法颜色 */
+        .method-post { background: #22c55e; }
+        .method-get { background: #3b82f6; }
+
+        /* 平滑滚动 */
+        html { scroll-behavior: smooth; }
+
+        .lang-tab { transition: all 0.2s; }
+        .lang-tab.active { background: #3b82f6; color: white; }
+    </style>
+</head>
+<body class="bg-gray-50 text-slate-800">
+
+    <!-- 顶部导航 -->
+    <nav class="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-xl border-b border-slate-200/60">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="index.html" class="flex items-center gap-2.5">
+                <div class="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
+                    <i class="fa-solid fa-shield-halved text-white text-sm"></i>
+                </div>
+                <span class="font-bold text-xl text-slate-800">TruthLens</span>
+                <span class="text-xs text-slate-400 font-medium hidden sm:inline">真识</span>
+            </a>
+            <div class="hidden md:flex items-center gap-8">
+                <a href="detect.html" class="text-sm font-medium text-slate-600 hover:text-blue-600 transition">检测中心</a>
+                <a href="api.html" class="text-sm font-semibold text-blue-600">API 接入</a>
+                <a href="pricing.html" class="text-sm font-medium text-slate-600 hover:text-blue-600 transition">定价方案</a>
+                <a href="dashboard.html" class="text-sm font-medium text-slate-600 hover:text-blue-600 transition">控制台</a>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="pricing.html" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition shadow-md shadow-blue-600/20">
+                    获取 API Key
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="pt-16 flex">
+        <!-- 左侧导航 -->
+        <aside class="hidden lg:block w-64 fixed top-16 bottom-0 overflow-y-auto border-r border-slate-200 bg-white p-4">
+            <div class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-3 px-3">快速开始</div>
+            <a href="#overview" class="sidebar-link active block py-2 px-3 rounded-lg text-sm text-slate-600 mb-0.5">概述</a>
+            <a href="#auth" class="sidebar-link block py-2 px-3 rounded-lg text-sm text-slate-600 mb-0.5">认证方式</a>
+            <a href="#quickstart" class="sidebar-link block py-2 px-3 rounded-lg text-sm text-slate-600 mb-0.5">快速上手</a>
+
+            <div class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-3 mt-6 px-3">API 端点</div>
+            <a href="#text-detect" class="sidebar-link block py-2 px-3 rounded-lg text-sm text-slate-600 mb-0.5">文本检测</a>
+            <a href="#image-detect" class="sidebar-link block py-2 px-3 rounded-lg text-sm text-slate-600 mb-0.5">图片检测</a>
+            <a href="#url-detect" class="sidebar-link block py-2 px-3 rounded-lg text-sm text-slate-600 mb-0.5">链接检测</a>
+            <a href="#batch-detect" class="sidebar-link block py-2 px-3 rounded-lg text-sm text-slate-600 mb-0.5">批量检测</a>
+            <a href="#result-query" class="sidebar-link block py-2 px-3 rounded-lg text-sm text-slate-600 mb-0.5">查询结果</a>
+
+            <div class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-3 mt-6 px-3">参考</div>
+            <a href="#risk-levels" class="sidebar-link block py-2 px-3 rounded-lg text-sm text-slate-600 mb-0.5">风险等级说明</a>
+            <a href="#error-codes" class="sidebar-link block py-2 px-3 rounded-lg text-sm text-slate-600 mb-0.5">错误码</a>
+            <a href="#rate-limits" class="sidebar-link block py-2 px-3 rounded-lg text-sm text-slate-600 mb-0.5">速率限制</a>
+            <a href="#sdks" class="sidebar-link block py-2 px-3 rounded-lg text-sm text-slate-600 mb-0.5">SDK 下载</a>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="lg:ml-64 flex-1 max-w-5xl mx-auto px-6 py-10">
+
+            <!-- 概述 -->
+            <section id="overview" class="mb-16">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-lg">REST API</span>
+                    <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-lg">v2.0</span>
+                </div>
+                <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">TruthLens API 文档</h1>
+                <p class="text-lg text-slate-500 leading-relaxed mb-6 max-w-3xl">
+                    通过 RESTful API 将 AI 内容检测与传播风险评估能力集成到您的系统中。支持文本、图片、链接和批量检测。
+                </p>
+
+                <div class="grid sm:grid-cols-3 gap-4 mb-8">
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                        <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mb-3">
+                            <i class="fa-solid fa-bolt text-blue-600"></i>
+                        </div>
+                        <div class="font-bold text-slate-800 mb-1">简单集成</div>
+                        <div class="text-sm text-slate-500">RESTful 接口，JSON 格式，5分钟完成对接</div>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                        <div class="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center mb-3">
+                            <i class="fa-solid fa-clock text-green-600"></i>
+                        </div>
+                        <div class="font-bold text-slate-800 mb-1">毫秒级响应</div>
+                        <div class="text-sm text-slate-500">平均响应时间 < 2s，99.9% 可用性 SLA</div>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                        <div class="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center mb-3">
+                            <i class="fa-solid fa-shield-halved text-purple-600"></i>
+                        </div>
+                        <div class="font-bold text-slate-800 mb-1">安全可靠</div>
+                        <div class="text-sm text-slate-500">HTTPS 加密传输，数据不留存</div>
+                    </div>
+                </div>
+
+                <!-- Base URL -->
+                <div class="bg-slate-900 rounded-xl p-4 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs text-slate-400 font-medium">Base URL</span>
+                        <code class="text-green-400 text-sm">https://api.truthlens.cn/v2</code>
+                    </div>
+                    <button class="text-slate-400 hover:text-white transition text-xs">
+                        <i class="fa-solid fa-copy"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 认证 -->
+            <section id="auth" class="mb-16">
+                <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-key text-yellow-500"></i> 认证方式
+                </h2>
+                <p class="text-sm text-slate-600 mb-4">所有 API 请求需要在 Header 中携带 API Key 进行认证：</p>
+
+                <div class="code-block mb-4">
+                    <div class="code-header">
+                        <span class="text-xs text-slate-400">HTTP Header</span>
+                        <button class="text-xs text-slate-400 hover:text-white transition"><i class="fa-solid fa-copy mr-1"></i> 复制</button>
+                    </div>
+                    <div class="code-body text-slate-300">
+                        <span class="key">Authorization</span>: <span class="string">Bearer YOUR_API_KEY</span>
+                    </div>
+                </div>
+
+                <div class="bg-amber-50 rounded-xl p-4 flex items-start gap-3 border border-amber-200">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+                    <div class="text-sm text-amber-800">
+                        <strong>安全提示：</strong>请勿在前端代码中暴露 API Key。建议通过后端服务转发 API 请求。
+                    </div>
+                </div>
+            </section>
+
+            <!-- 快速上手 -->
+            <section id="quickstart" class="mb-16">
+                <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-rocket text-blue-500"></i> 快速上手
+                </h2>
+                <p class="text-sm text-slate-600 mb-6">3 步完成你的第一次 API 调用：</p>
+
+                <div class="space-y-4 mb-8">
+                    <div class="flex items-start gap-4">
+                        <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">1</div>
+                        <div>
+                            <div class="font-bold text-slate-800 mb-1">获取 API Key</div>
+                            <p class="text-sm text-slate-600">在<a href="dashboard.html" class="text-blue-600 hover:underline">控制台</a>创建应用并获取 API Key</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">2</div>
+                        <div>
+                            <div class="font-bold text-slate-800 mb-1">发送检测请求</div>
+                            <p class="text-sm text-slate-600">调用对应端点提交需要检测的内容</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">3</div>
+                        <div>
+                            <div class="font-bold text-slate-800 mb-1">获取检测结果</div>
+                            <p class="text-sm text-slate-600">实时返回 AI 生成概率和传播风险等级</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 语言切换 -->
+                <div class="flex gap-1 mb-2">
+                    <button class="lang-tab active px-3 py-1.5 rounded-lg text-xs font-medium" onclick="switchLang(this, 'python')">Python</button>
+                    <button class="lang-tab px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-600" onclick="switchLang(this, 'curl')">cURL</button>
+                    <button class="lang-tab px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-600" onclick="switchLang(this, 'node')">Node.js</button>
+                    <button class="lang-tab px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-600" onclick="switchLang(this, 'java')">Java</button>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="text-xs text-slate-400">Python 示例</span>
+                        <button class="text-xs text-slate-400 hover:text-white transition"><i class="fa-solid fa-copy mr-1"></i> 复制</button>
+                    </div>
+                    <div class="code-body text-slate-300">
+<pre><span class="keyword">import</span> requests
+
+<span class="comment"># 文本检测 API 调用</span>
+response = requests.<span class="function">post</span>(
+    <span class="string">"https://api.truthlens.cn/v2/detect/text"</span>,
+    headers={
+        <span class="string">"Authorization"</span>: <span class="string">"Bearer YOUR_API_KEY"</span>,
+        <span class="string">"Content-Type"</span>: <span class="string">"application/json"</span>
+    },
+    json={
+        <span class="string">"text"</span>: <span class="string">"这款面霜真的太好用了！作为一个干皮星人..."</span>,
+        <span class="string">"platform"</span>: <span class="string">"xiaohongshu"</span>,
+        <span class="string">"options"</span>: {
+            <span class="string">"deep_analysis"</span>: <span class="keyword">True</span>,
+            <span class="string">"risk_assessment"</span>: <span class="keyword">True</span>
+        }
+    }
+)
+
+result = response.<span class="function">json</span>()
+<span class="function">print</span>(<span class="string">f"AI 生成: </span>{result[<span class="string">'ai_generated'</span>]}<span class="string">"</span>)
+<span class="function">print</span>(<span class="string">f"概率: </span>{result[<span class="string">'ai_probability'</span>]}<span class="string">"</span>)
+<span class="function">print</span>(<span class="string">f"风险等级: </span>{result[<span class="string">'risk_level'</span>]}<span class="string">"</span>)</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 文本检测 API -->
+            <section id="text-detect" class="mb-16">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="method-post text-white text-xs font-bold px-3 py-1 rounded-lg">POST</span>
+                    <code class="text-sm text-slate-700 font-medium">/detect/text</code>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">文本检测</h2>
+                <p class="text-sm text-slate-600 mb-6">检测输入文本是否由 AI 生成，并评估传播风险等级。</p>
+
+                <!-- 请求参数 -->
+                <h3 class="text-lg font-bold text-slate-800 mb-3">请求参数</h3>
+                <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-6">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">参数</th>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">类型</th>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">必填</th>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">说明</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr>
+                                <td class="px-4 py-3"><code class="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-xs">text</code></td>
+                                <td class="px-4 py-3 text-slate-500">string</td>
+                                <td class="px-4 py-3"><span class="text-red-500 font-bold">是</span></td>
+                                <td class="px-4 py-3 text-slate-600">待检测的文本内容，1~10000 字符</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3"><code class="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-xs">platform</code></td>
+                                <td class="px-4 py-3 text-slate-500">string</td>
+                                <td class="px-4 py-3 text-slate-400">否</td>
+                                <td class="px-4 py-3 text-slate-600">来源平台：xiaohongshu / douyin / taobao / weixin / other</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3"><code class="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-xs">options.deep_analysis</code></td>
+                                <td class="px-4 py-3 text-slate-500">boolean</td>
+                                <td class="px-4 py-3 text-slate-400">否</td>
+                                <td class="px-4 py-3 text-slate-600">启用段落级深度分析，默认 false</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3"><code class="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-xs">options.risk_assessment</code></td>
+                                <td class="px-4 py-3 text-slate-500">boolean</td>
+                                <td class="px-4 py-3 text-slate-400">否</td>
+                                <td class="px-4 py-3 text-slate-600">启用传播风险评估，默认 true</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3"><code class="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-xs">options.language</code></td>
+                                <td class="px-4 py-3 text-slate-500">string</td>
+                                <td class="px-4 py-3 text-slate-400">否</td>
+                                <td class="px-4 py-3 text-slate-600">语言：auto / zh / en，默认 auto</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 响应示例 -->
+                <h3 class="text-lg font-bold text-slate-800 mb-3">响应示例</h3>
+                <div class="code-block mb-6">
+                    <div class="code-header">
+                        <span class="text-xs text-slate-400">200 OK · JSON</span>
+                        <button class="text-xs text-slate-400 hover:text-white transition"><i class="fa-solid fa-copy mr-1"></i> 复制</button>
+                    </div>
+                    <div class="code-body text-slate-300">
+<pre>{
+  <span class="key">"request_id"</span>: <span class="string">"tl-2026030201-abc123"</span>,
+  <span class="key">"ai_generated"</span>: <span class="keyword">true</span>,
+  <span class="key">"ai_probability"</span>: <span class="number">0.927</span>,
+  <span class="key">"risk_level"</span>: <span class="string">"L3"</span>,
+  <span class="key">"risk_score"</span>: <span class="number">72</span>,
+  <span class="key">"suspected_model"</span>: <span class="string">"GPT-4"</span>,
+  <span class="key">"content_category"</span>: <span class="string">"ecommerce_review"</span>,
+  <span class="key">"risk_details"</span>: {
+    <span class="key">"false_advertising"</span>: <span class="number">85</span>,
+    <span class="key">"propagation_risk"</span>: <span class="number">72</span>,
+    <span class="key">"consumer_misleading"</span>: <span class="number">58</span>,
+    <span class="key">"platform_violation"</span>: <span class="number">40</span>
+  },
+  <span class="key">"language_features"</span>: {
+    <span class="key">"perplexity"</span>: <span class="number">12.3</span>,
+    <span class="key">"burstiness"</span>: <span class="number">0.23</span>,
+    <span class="key">"vocabulary_diversity"</span>: <span class="number">0.67</span>
+  },
+  <span class="key">"paragraph_analysis"</span>: [
+    {
+      <span class="key">"index"</span>: <span class="number">0</span>,
+      <span class="key">"ai_probability"</span>: <span class="number">0.96</span>,
+      <span class="key">"suspected_model"</span>: <span class="string">"GPT-4"</span>,
+      <span class="key">"text"</span>: <span class="string">"这款面霜真的太好用了！..."</span>
+    }
+  ],
+  <span class="key">"processing_time_ms"</span>: <span class="number">1823</span>
+}</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 图片检测 -->
+            <section id="image-detect" class="mb-16">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="method-post text-white text-xs font-bold px-3 py-1 rounded-lg">POST</span>
+                    <code class="text-sm text-slate-700 font-medium">/detect/image</code>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">图片检测</h2>
+                <p class="text-sm text-slate-600 mb-6">检测图片是否由 AI 生成（Midjourney, DALL·E, Stable Diffusion等），同时可 OCR 提取图上文字进行分析。</p>
+
+                <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-6">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">参数</th>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">类型</th>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">必填</th>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">说明</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr>
+                                <td class="px-4 py-3"><code class="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-xs">image</code></td>
+                                <td class="px-4 py-3 text-slate-500">file / base64</td>
+                                <td class="px-4 py-3"><span class="text-red-500 font-bold">是</span></td>
+                                <td class="px-4 py-3 text-slate-600">图片文件或 Base64 编码，最大 20MB</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3"><code class="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-xs">ocr</code></td>
+                                <td class="px-4 py-3 text-slate-500">boolean</td>
+                                <td class="px-4 py-3 text-slate-400">否</td>
+                                <td class="px-4 py-3 text-slate-600">是否 OCR 提取图片文字，默认 true</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3"><code class="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-xs">platform</code></td>
+                                <td class="px-4 py-3 text-slate-500">string</td>
+                                <td class="px-4 py-3 text-slate-400">否</td>
+                                <td class="px-4 py-3 text-slate-600">来源平台标识</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 链接检测 -->
+            <section id="url-detect" class="mb-16">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="method-post text-white text-xs font-bold px-3 py-1 rounded-lg">POST</span>
+                    <code class="text-sm text-slate-700 font-medium">/detect/url</code>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">链接检测</h2>
+                <p class="text-sm text-slate-600 mb-6">提交平台内容链接，系统自动抓取并分析内容。支持小红书、抖音、淘宝、微信公众号等主流平台。</p>
+
+                <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-6">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">参数</th>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">类型</th>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">必填</th>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">说明</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr>
+                                <td class="px-4 py-3"><code class="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-xs">url</code></td>
+                                <td class="px-4 py-3 text-slate-500">string</td>
+                                <td class="px-4 py-3"><span class="text-red-500 font-bold">是</span></td>
+                                <td class="px-4 py-3 text-slate-600">内容页面 URL</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3"><code class="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-xs">include_comments</code></td>
+                                <td class="px-4 py-3 text-slate-500">boolean</td>
+                                <td class="px-4 py-3 text-slate-400">否</td>
+                                <td class="px-4 py-3 text-slate-600">是否同时抓取评论区内容，默认 false</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 批量检测 -->
+            <section id="batch-detect" class="mb-16">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="method-post text-white text-xs font-bold px-3 py-1 rounded-lg">POST</span>
+                    <code class="text-sm text-slate-700 font-medium">/detect/batch</code>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">批量检测</h2>
+                <p class="text-sm text-slate-600 mb-6">提交多条内容进行批量检测，返回 batch_id 用于查询结果。最多支持 500 条/次。</p>
+
+                <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-6">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">参数</th>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">类型</th>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">必填</th>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">说明</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr>
+                                <td class="px-4 py-3"><code class="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-xs">items</code></td>
+                                <td class="px-4 py-3 text-slate-500">array</td>
+                                <td class="px-4 py-3"><span class="text-red-500 font-bold">是</span></td>
+                                <td class="px-4 py-3 text-slate-600">检测项数组，每项含 type(text/url/image) 和 content</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3"><code class="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-xs">callback_url</code></td>
+                                <td class="px-4 py-3 text-slate-500">string</td>
+                                <td class="px-4 py-3 text-slate-400">否</td>
+                                <td class="px-4 py-3 text-slate-600">检测完成后回调通知地址</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 查询结果 -->
+            <section id="result-query" class="mb-16">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="method-get text-white text-xs font-bold px-3 py-1 rounded-lg">GET</span>
+                    <code class="text-sm text-slate-700 font-medium">/detect/result/{request_id}</code>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">查询检测结果</h2>
+                <p class="text-sm text-slate-600 mb-6">根据 request_id 或 batch_id 查询检测结果。对于批量检测和异步任务，需要通过此接口轮询获取结果。</p>
+            </section>
+
+            <!-- 风险等级 -->
+            <section id="risk-levels" class="mb-16">
+                <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-signal text-orange-500"></i> 风险等级说明
+                </h2>
+                <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">等级</th>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">标识</th>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">分数范围</th>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">说明</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr>
+                                <td class="px-4 py-3"><span class="bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded text-xs">L1</span></td>
+                                <td class="px-4 py-3 text-slate-700 font-medium">低风险</td>
+                                <td class="px-4 py-3 text-slate-500">0 - 25</td>
+                                <td class="px-4 py-3 text-slate-600">AI辅助创作，内容合规，传播影响可控</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3"><span class="bg-yellow-100 text-yellow-700 font-bold px-2 py-0.5 rounded text-xs">L2</span></td>
+                                <td class="px-4 py-3 text-slate-700 font-medium">中风险</td>
+                                <td class="px-4 py-3 text-slate-500">26 - 50</td>
+                                <td class="px-4 py-3 text-slate-600">AI生成痕迹明显，需标注，建议人工复核</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3"><span class="bg-orange-100 text-orange-700 font-bold px-2 py-0.5 rounded text-xs">L3</span></td>
+                                <td class="px-4 py-3 text-slate-700 font-medium">高风险</td>
+                                <td class="px-4 py-3 text-slate-500">51 - 75</td>
+                                <td class="px-4 py-3 text-slate-600">高度疑似AI伪造，涉及虚假种草/评测</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3"><span class="bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded text-xs">L4</span></td>
+                                <td class="px-4 py-3 text-slate-700 font-medium">极高风险</td>
+                                <td class="px-4 py-3 text-slate-500">76 - 100</td>
+                                <td class="px-4 py-3 text-slate-600">确认AI伪造，涉及深度伪造/诈骗/虚假新闻</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 错误码 -->
+            <section id="error-codes" class="mb-16">
+                <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-xmark text-red-500"></i> 错误码
+                </h2>
+                <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">HTTP 状态码</th>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">错误代码</th>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">说明</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr><td class="px-4 py-3 text-slate-700">400</td><td class="px-4 py-3"><code class="text-xs bg-red-50 text-red-600 px-1.5 py-0.5 rounded">INVALID_REQUEST</code></td><td class="px-4 py-3 text-slate-600">请求参数无效</td></tr>
+                            <tr><td class="px-4 py-3 text-slate-700">401</td><td class="px-4 py-3"><code class="text-xs bg-red-50 text-red-600 px-1.5 py-0.5 rounded">UNAUTHORIZED</code></td><td class="px-4 py-3 text-slate-600">API Key 无效或已过期</td></tr>
+                            <tr><td class="px-4 py-3 text-slate-700">403</td><td class="px-4 py-3"><code class="text-xs bg-red-50 text-red-600 px-1.5 py-0.5 rounded">QUOTA_EXCEEDED</code></td><td class="px-4 py-3 text-slate-600">配额已用完</td></tr>
+                            <tr><td class="px-4 py-3 text-slate-700">429</td><td class="px-4 py-3"><code class="text-xs bg-red-50 text-red-600 px-1.5 py-0.5 rounded">RATE_LIMITED</code></td><td class="px-4 py-3 text-slate-600">请求频率超限</td></tr>
+                            <tr><td class="px-4 py-3 text-slate-700">500</td><td class="px-4 py-3"><code class="text-xs bg-red-50 text-red-600 px-1.5 py-0.5 rounded">INTERNAL_ERROR</code></td><td class="px-4 py-3 text-slate-600">服务器内部错误</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 速率限制 -->
+            <section id="rate-limits" class="mb-16">
+                <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-gauge-high text-blue-500"></i> 速率限制
+                </h2>
+                <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">方案</th>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">QPS</th>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">日调用上限</th>
+                                <th class="text-left px-4 py-3 font-semibold text-slate-600">月配额</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr><td class="px-4 py-3 font-medium">免费版</td><td class="px-4 py-3 text-slate-500">1</td><td class="px-4 py-3 text-slate-500">100</td><td class="px-4 py-3 text-slate-500">1,000</td></tr>
+                            <tr><td class="px-4 py-3 font-medium">专业版</td><td class="px-4 py-3 text-slate-500">10</td><td class="px-4 py-3 text-slate-500">5,000</td><td class="px-4 py-3 text-slate-500">50,000</td></tr>
+                            <tr><td class="px-4 py-3 font-medium">企业版</td><td class="px-4 py-3 text-slate-500">100+</td><td class="px-4 py-3 text-slate-500">不限</td><td class="px-4 py-3 text-slate-500">定制</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SDK -->
+            <section id="sdks" class="mb-16">
+                <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-puzzle-piece text-indigo-500"></i> SDK 下载
+                </h2>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm text-center hover:shadow-md transition cursor-pointer">
+                        <i class="fa-brands fa-python text-yellow-500 text-3xl mb-3"></i>
+                        <div class="font-bold text-slate-800 mb-1">Python</div>
+                        <div class="text-xs text-slate-400">pip install truthlens</div>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm text-center hover:shadow-md transition cursor-pointer">
+                        <i class="fa-brands fa-node-js text-green-600 text-3xl mb-3"></i>
+                        <div class="font-bold text-slate-800 mb-1">Node.js</div>
+                        <div class="text-xs text-slate-400">npm i truthlens-sdk</div>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm text-center hover:shadow-md transition cursor-pointer">
+                        <i class="fa-brands fa-java text-red-500 text-3xl mb-3"></i>
+                        <div class="font-bold text-slate-800 mb-1">Java</div>
+                        <div class="text-xs text-slate-400">Maven Central</div>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm text-center hover:shadow-md transition cursor-pointer">
+                        <i class="fa-brands fa-golang text-blue-500 text-3xl mb-3"></i>
+                        <div class="font-bold text-slate-800 mb-1">Go</div>
+                        <div class="text-xs text-slate-400">go get truthlens</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        function switchLang(btn, lang) {
+            document.querySelectorAll('.lang-tab').forEach(t => {
+                t.classList.remove('active');
+                t.classList.add('bg-slate-100', 'text-slate-600');
+            });
+            btn.classList.add('active');
+            btn.classList.remove('bg-slate-100', 'text-slate-600');
+        }
+
+        // 侧边栏活跃状态跟踪
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+                    const link = document.querySelector(`.sidebar-link[href="#${entry.target.id}"]`);
+                    if (link) link.classList.add('active');
+                }
+            });
+        }, { rootMargin: '-20% 0px -80% 0px' });
+
+        document.querySelectorAll('section[id]').forEach(s => observer.observe(s));
+    </script>
+</body>
+</html>
