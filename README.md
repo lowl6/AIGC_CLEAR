@@ -68,15 +68,10 @@ AIGC_CLEAR/
 - E_FF: Low-level Forensic Feature expert training prep
 - E_SL: Statistical Language expert training prep
 
-Migrated STaR code:
-
-- `src/STaR/任务一/phase1/*` -> `experts/e_it/phase1/`
-- `src/STaR/任务二/phase1/*` -> `experts/e_vl/phase1/`
-- `STaR/phase2/*.py` -> `experts/common/phase2/`
-
 ## 3. Checkpoint Placement (Important)
 
 Place all training outputs under `checkpoints/` with one directory per expert and one sub-directory per run timestamp.
+Please contact us to obtain the fine-tuned checkpoint.
 
 ```text
 checkpoints/
@@ -144,7 +139,7 @@ Included endpoints:
 - `GET /api/checkpoint_layout`: returns expected checkpoint folder layout
 - `POST /api/mock_detect`: simple mock endpoint for UI demonstration
 
-## 7. Run Migrated STaR Pipelines
+## 7. Run Migrated Pipelines
 
 From the `AIGC_CLEAR` root:
 
